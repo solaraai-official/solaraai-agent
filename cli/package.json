@@ -1,0 +1,52 @@
+{
+  "name": "solaraai",
+  "version": "0.1.0",
+  "description": "Solara AI from the command line: an AI agent turns a talking-head clip into an edited, captioned short video with an API key.",
+  "type": "module",
+  "bin": {
+    "solara": "dist/solara.js"
+  },
+  "files": [
+    "dist/solara.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "bun build.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "pack:dry": "bun run build && npm pack --dry-run",
+    "prepack": "bun run build"
+  },
+  "keywords": [
+    "ai",
+    "video",
+    "mcp",
+    "agent",
+    "short-form",
+    "captions",
+    "cli",
+    "solara"
+  ],
+  "homepage": "https://docs.solaraai.com/assistants/skill-and-cli",
+  "bugs": {
+    "url": "https://solaraai.com/contact"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/solaraai-official/solara-agent-skills.git",
+    "directory": "cli"
+  },
+  "license": "MIT",
+  "author": "Solara AI (https://solaraai.com)",
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.0",
+    "typescript": "~5.9.2"
+  }
+}

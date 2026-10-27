@@ -1,0 +1,74 @@
+# Publishes the CLI (cli/, npm `solaraai`) when a release tagged cli-v<version> is published.
+#
+# npm trusted publishing: npm trusts this file in this repository (configured on npmjs.com, see
+# MAINTAINERS.md), GitHub hands the job a short-lived OIDC token, and npm signs provenance for the
+# package. No npm token exists anywhere. Keep this file's name: npm matches it exactly.
+name: Publish the CLI to npm
+
+on:
+  release:
+    types: [published]
+
+permissions: {}
+
+concurrency:
+  group: publish-cli
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish solaraai
+    if: startsWith(github.event.release.tag_name, 'cli-v')
+    runs-on: ubuntu-latest # trusted publishing works only on GitHub-hosted runners
+    timeout-minutes: 15
+    # The npm trusted publisher names this environment too; its required reviewers approve each
+    # release before the job gets its token.
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write # the OIDC token npm exchanges for a one-time publish token
+    defaults:
+      run:
+        working-directory: cli
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.0
+          no-cache: true # never a cache in a release build
+      # Node 24 ships npm 11.19+; trusted publishing needs Node 22.14.0+ and npm 11.5.1+.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false # never a cache in a release build
+
+      - name: The tag names the version in cli/package.json
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "${TAG}" != "cli-v${version}" ]; then
+            echo "::error::release tag ${TAG} is not cli-v${version} (cli/package.json): fix one, then release again"
+            exit 1
+          fi
+      - name: Node and npm can use trusted publishing
+        run: node ../scripts/check-trusted-publishing.mjs "$(npm --version)"
+
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun test
+      - run: bun run build
+
+      # A prerelease goes out under `next`, so `npx -y solaraai` keeps the last release.
+      - name: Publish
+        env:
+          PRERELEASE: ${{ github.event.release.prerelease }}
+        run: |
+          if [ "${PRERELEASE}" = "true" ]; then
+            npm publish --provenance --access public --tag next
+          else
+            npm publish --provenance --access public
+          fi

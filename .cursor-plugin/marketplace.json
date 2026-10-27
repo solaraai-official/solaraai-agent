@@ -1,0 +1,17 @@
+{
+  "name": "solaraai",
+  "owner": {
+    "name": "Solara AI",
+    "email": "contact@solaraai.com"
+  },
+  "metadata": {
+    "description": "Solara AI for Cursor and Grok Bot: make edited, captioned short videos from your recordings."
+  },
+  "plugins": [
+    {
+      "name": "solara",
+      "source": "./",
+      "description": "Edit a talking-head clip into a captioned short video with Solara AI, then export it. Includes the Solara AI MCP server and the solara-video skill."
+    }
+  ]
+}

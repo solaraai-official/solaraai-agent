@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "solara": {
+      "type": "http",
+      "url": "https://api.solaraai.com/mcp"
+    }
+  }
+}

@@ -1,0 +1,105 @@
+# What must never reach this public repository, checked on every pull request and every push to
+# main, over the whole history (not just the change):
+#   - secrets: gitleaks (every pattern) and trufflehog (only secrets it verified are live)
+#   - Solara's internal names: scripts/check-no-internal.ts (dev hosts, clusters, account and
+#     database ids, private email addresses, local ports)
+#   - unsafe workflows: zizmor and actionlint
+# The scanners are release binaries pinned by version and SHA-256, not third-party actions.
+name: Safety
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: safety-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secrets:
+    name: Secrets (gitleaks, trufflehog)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      GITLEAKS_VERSION: 8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb # linux_x64
+      TRUFFLEHOG_VERSION: 3.99.7
+      TRUFFLEHOG_SHA256: bdbea0508e439b144f49de14e775908de5f902f3d14ea7ae8354bae72b0b72ef # linux_amd64
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # every commit on every branch and tag
+          persist-credentials: false
+      - name: Install gitleaks and trufflehog (pinned, SHA-256 checked)
+        run: |
+          set -euo pipefail
+          fetch() { # <binary> <release tarball URL> <sha256>
+            curl --fail --silent --show-error --location --output "${RUNNER_TEMP}/$1.tar.gz" "$2"
+            echo "$3  ${RUNNER_TEMP}/$1.tar.gz" | sha256sum --check --strict
+            tar -xzf "${RUNNER_TEMP}/$1.tar.gz" -C "${RUNNER_TEMP}" "$1"
+          }
+          fetch gitleaks \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            "${GITLEAKS_SHA256}"
+          fetch trufflehog \
+            "https://github.com/trufflesecurity/trufflehog/releases/download/v${TRUFFLEHOG_VERSION}/trufflehog_${TRUFFLEHOG_VERSION}_linux_amd64.tar.gz" \
+            "${TRUFFLEHOG_SHA256}"
+      - name: gitleaks, every commit
+        run: '"${RUNNER_TEMP}/gitleaks" git --redact --no-banner --verbose .'
+      - name: trufflehog, every commit, verified secrets
+        run: '"${RUNNER_TEMP}/trufflehog" git "file://${GITHUB_WORKSPACE}" --results=verified --fail --no-update'
+
+  internal-names:
+    name: No internal names
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.0
+          no-cache: true
+      - name: The denylist catches each shape it promises to
+        run: bun scripts/check-no-internal.ts --self-test
+      - name: Every tracked file
+        run: bun scripts/check-no-internal.ts
+      - name: Every commit and commit message
+        run: bun scripts/check-no-internal.ts --history
+
+  workflows:
+    name: Workflows (zizmor, actionlint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      ACTIONLINT_VERSION: 1.7.12
+      ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8 # linux_amd64
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Findings fail the job and print in its log. Not uploaded to code scanning: a pull request
+      # from a fork gets no `security-events: write`.
+      - uses: zizmorcore/zizmor-action@53290badfa369cb0bf7ad16342cb62c2fa47ac7b # v0.8.0
+        with:
+          version: 1.31.1
+          advanced-security: false
+      - name: actionlint (pinned, SHA-256 checked; shellcheck is on the runner)
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --output "${RUNNER_TEMP}/actionlint.tar.gz" \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          echo "${ACTIONLINT_SHA256}  ${RUNNER_TEMP}/actionlint.tar.gz" | sha256sum --check --strict
+          tar -xzf "${RUNNER_TEMP}/actionlint.tar.gz" -C "${RUNNER_TEMP}" actionlint
+          "${RUNNER_TEMP}/actionlint" -color

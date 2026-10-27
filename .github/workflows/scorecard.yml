@@ -1,0 +1,50 @@
+# OpenSSF Scorecard: rates this repository's supply-chain practices weekly (and after each merge),
+# shows the findings in the Security tab and publishes the score for the README badge.
+#
+# Pinned to v2.5.0, the latest release (2026-10-12). The action's README on main says "v2.6.0 or
+# later" for `fail_on_publish_error`, an input merged after v2.5.0 and not released yet; this file
+# does not use it.
+#
+# Publishing requires this shape (the Scorecard API rejects anything else): no workflow-level env,
+# defaults or write permissions; in this job only the actions below, no `run` steps.
+name: Scorecard
+
+on:
+  schedule:
+    - cron: '27 6 * * 1' # Mondays, 06:27 UTC
+  push:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: scorecard
+  cancel-in-progress: true
+
+jobs:
+  analysis:
+    name: OpenSSF Scorecard
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read # the checkout
+      actions: read # Scorecard reads the workflows' runs
+      security-events: write # the findings, in the Security tab
+      id-token: write # publishing the score
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ossf/scorecard-action@fa7117db83c52d787ae5a89f350999701505d78e # v2.5.0
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: scorecard-results
+          path: results.sarif
+          retention-days: 5
+      - uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          sarif_file: results.sarif

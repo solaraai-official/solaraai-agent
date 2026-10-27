@@ -1,0 +1,17 @@
+{
+  "name": "solaraai",
+  "description": "Solara AI for Claude Code: make edited, captioned short videos from your recordings.",
+  "owner": {
+    "name": "Solara AI",
+    "url": "https://solaraai.com"
+  },
+  "plugins": [
+    {
+      "name": "solara",
+      "source": "./",
+      "description": "Edit a talking-head clip into a captioned short video with Solara AI, then export it. Includes the Solara AI MCP server and the solara-video skill.",
+      "category": "media",
+      "tags": ["video", "captions", "reels", "tiktok", "shorts"]
+    }
+  ]
+}
