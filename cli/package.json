@@ -1,9 +1,10 @@
 {
   "name": "solaraai",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Solara AI from the command line: an AI agent turns a talking-head clip into an edited, captioned short video with an API key.",
   "type": "module",
   "bin": {
+    "solaraai": "dist/solara.js",
     "solara": "dist/solara.js"
   },
   "files": [
@@ -31,7 +32,7 @@
     "cli",
     "solara"
   ],
-  "homepage": "https://docs.solaraai.com/assistants/skill-and-cli",
+  "homepage": "https://docs.solaraai.com/agents/skill-and-cli",
   "bugs": {
     "url": "https://solaraai.com/contact"
   },

@@ -74,6 +74,16 @@ export function nextSteps(cli: string): Record<string, string> {
       "Pause length and speed aren't offered to this workspace. Tell the person and ask whether to start without them (drop --pause-ms and --speed).",
     landscape_off:
       "16:9 isn't offered to this workspace yet. Tell the person and ask whether to make it 9:16 instead (drop --aspect).",
+    // upload-url: a link Solara would not, or could not, fetch.
+    url_not_allowed:
+      'Solara refused the link (the detail says why). Ask the person for a public share link to the video file itself (Google Drive: Share -> Anyone with the link; Dropbox: Copy link).',
+    url_not_public: `The link isn't public. Ask the person to share it as Anyone with the link (Google Drive) or to copy a Dropbox link, then run \`${cli} upload-url\` again.`,
+    url_unreachable: `Solara couldn't download the file (the detail says why). Ask the person whether the link opens in a private window, or for the file itself: \`${cli} upload <file>\`.`,
+    not_a_video: "The link isn't an .mp4, .mov or .webm video. Ask the person for the link to the video file itself.",
+    video_too_large: 'The video is over 2 GB. Ask the person for a smaller export.',
+    video_too_long: 'The video is over 10 minutes. Ask the person for a clip of 10 minutes or less.',
+    url_fetches_busy:
+      'Solara is already fetching videos for this workspace. Wait a minute for one to finish, then run the same command again.',
   };
 }
 

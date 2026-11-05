@@ -1,6 +1,7 @@
 // Every command, its arguments and options, and the help an agent meeting the CLI cold reads.
 // `{cli}` in any text is how this run was started: `solara`, or `npx -y solaraai`.
 
+import { FETCH_TIMEOUT_SECONDS } from './fetch-upload';
 import { ASPECTS, DEFAULT_STYLE, INTENSITIES, PAUSE_MS_RANGE, SPEED_RANGE } from './video';
 
 export interface OptionSpec {
@@ -14,7 +15,18 @@ export interface OptionSpec {
 }
 
 export interface CommandSpec {
-  name: 'login' | 'styles' | 'upload' | 'start' | 'status' | 'wait' | 'export' | 'download' | 'usage';
+  name:
+    | 'login'
+    | 'styles'
+    | 'upload'
+    | 'upload-url'
+    | 'start'
+    | 'status'
+    | 'wait'
+    | 'export'
+    | 'download'
+    | 'usage'
+    | 'calendar';
   summary: string;
   args: { name: string; help: string }[];
   options: OptionSpec[];
@@ -55,6 +67,34 @@ export const COMMANDS: CommandSpec[] = [
       'A part that fails is tried up to 4 times; after that, run the same command again (a fresh upload).',
     ],
     examples: ['{cli} upload talk.mp4'],
+  },
+  {
+    name: 'upload-url',
+    summary: 'have Solara fetch a recording from a public link (Google Drive, Dropbox, a website)',
+    args: [{ name: 'link', help: 'the public link to the video file the person gave' }],
+    options: [
+      {
+        name: 'timeout',
+        kind: 'number',
+        value: '<seconds>',
+        help: 'stop waiting for the fetch after this long',
+        default: String(FETCH_TIMEOUT_SECONDS),
+      },
+      {
+        name: 'idempotency-key',
+        kind: 'string',
+        value: '<key>',
+        help: 'pick up a fetch already started, with the key it printed',
+      },
+    ],
+    about: [
+      'For a recording the person gives as a link, not a file: Solara downloads it itself (.mp4, .mov or',
+      ".webm, up to 2 GB and 10 minutes). Prints the upload_id and, when the file says it, the clip's length",
+      "(duration_ms): `start` needs both. A link that isn't public is refused with what to ask the person.",
+      'Exit 3 when the timeout comes first: run it again with the --idempotency-key it printed (nothing is',
+      'fetched twice).',
+    ],
+    examples: ['{cli} upload-url "https://drive.google.com/file/d/<id>/view?usp=sharing"'],
   },
   {
     name: 'start',
@@ -180,6 +220,32 @@ export const COMMANDS: CommandSpec[] = [
     about: ['Check exports_left before exporting.'],
     examples: ['{cli} usage'],
   },
+  {
+    name: 'calendar',
+    summary: "read the person's posting calendar: what posts when, and how each post went",
+    args: [],
+    options: [
+      {
+        name: 'from',
+        kind: 'string',
+        value: '<date>',
+        help: 'start of the window, a date or time (default: Monday 00:00 UTC of this week)',
+      },
+      {
+        name: 'to',
+        kind: 'string',
+        value: '<date>',
+        help: 'end of the window, not included (default: from + 14 days)',
+      },
+      { name: 'limit', kind: 'int', value: '<n>', help: 'at most this many posts, 1-100', default: '50' },
+    ],
+    about: [
+      'Every post in the window, in publish order: its status (scheduled, publishing, published, failed,',
+      '...), its time in UTC, its platforms and how each platform went. Read-only: an API key cannot post,',
+      'move or retry a post; the person does that in the Solara calendar.',
+    ],
+    examples: ['{cli} calendar', '{cli} calendar --from 2026-11-09 --to 2026-11-16'],
+  },
 ];
 
 export function commandSpec(name: string): CommandSpec | undefined {
@@ -215,6 +281,7 @@ export function mainHelp(cli: string, version: string): string {
     `  ${cli} export <video_id>            uses one of the plan's videos`,
     `  ${cli} wait <video_id> --until export`,
     `  ${cli} download <video_id> --out talk-edited.mp4`,
+    `A link instead of a file (Google Drive, Dropbox): \`${cli} upload-url <link>\`, then \`start\` as above.`,
     '',
     'Commands:',
     ...COMMANDS.map((command) => `  ${command.name.padEnd(width)}  ${command.summary}`),
@@ -225,10 +292,12 @@ export function mainHelp(cli: string, version: string): string {
     '',
     'Rules: show the edit and get a yes before exporting; export once per approved edit, never in a',
     "loop; never post, publish or touch billing (an API key can't); never print the API key.",
+    'To post a video, photos or a text post, the person does it in Solara, or connects an AI agent',
+    "through Solara's MCP server and approves each post: https://docs.solaraai.com/agents/connect",
     '',
     'Environment: SOLARA_API_KEY (required), SOLARA_API_URL (default https://api.solaraai.com),',
     'SOLARA_APP_URL (the app, for edit links), HTTPS_PROXY / NO_PROXY.',
-    'Docs: https://docs.solaraai.com/assistants/skill-and-cli',
+    'Docs: https://docs.solaraai.com/agents/skill-and-cli',
   ];
   return lines.join('\n');
 }

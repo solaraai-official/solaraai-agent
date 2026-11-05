@@ -15,14 +15,16 @@ token exists anywhere.
 ## One-time setup (the owner)
 
 Do steps 4 and 5 within two days of each other: npm expires a trusted publisher that has not
-published within two days of being created.
+published within two days of being created. Both wait for launch day: `npm publish --provenance`
+fails from a private repository, and Actions are off until then.
 
 ### 1. npm: the account and the package
 
 - An npm account with two-factor authentication on, owning the package `solaraai`.
-- The package must already exist before a trusted publisher can be added to it (npm's rule). If
-  the name was claimed by publishing a placeholder (say `0.0.0`) by hand, that is enough. The
-  placeholder is deprecated in step 6.
+- The package must already exist before a trusted publisher can be added to it (npm's rule). The
+  name is claimed by publishing `0.2.0` once by hand, signed in to npm, from the monorepo's
+  `packages/node/solara-cli`: `npm publish --access public`. It has no provenance; every later
+  version comes from this repository and has it.
 
 ### 2. GitHub: the repository, private until launch day
 
@@ -125,20 +127,20 @@ npm trust list solaraai
 ### 5. The first release
 
 ```bash
-grep '"version"' cli/package.json        # 0.1.0
-gh release create cli-v0.1.0 --repo solaraai-official/solara-agent-skills --target main \
-  --title "solaraai 0.1.0" --notes "The first release of the Solara CLI: npx -y solaraai --help"
+grep '"version"' cli/package.json        # newer than 0.2.0, which npm already has (step 1)
+gh release create cli-v<version> --repo solaraai-official/solara-agent-skills --target main \
+  --title "solaraai <version>" --notes "The Solara CLI: npx -y solaraai --help"
 ```
 
-(Or **Releases → Draft a new release**, tag `cli-v0.1.0` on `main`, **Publish release**.) Then, in
-**Actions → Publish the CLI to npm**, approve the `npm` deployment. The job fails before publishing
-if the tag is not `cli-v` + the version in `cli/package.json`.
+(Or **Releases → Draft a new release**, tag `cli-v<version>` on `main`, **Publish release**.)
+Then, in **Actions → Publish the CLI to npm**, approve the `npm` deployment. The job fails before
+publishing if the tag is not `cli-v` + the version in `cli/package.json`.
 
 Check it:
 
 ```bash
-npm view solaraai version                # 0.1.0
-npx -y solaraai@0.1.0 --version          # solaraai 0.1.0
+npm view solaraai version                # <version>
+npx -y solaraai@<version> --version      # solaraai <version>
 ```
 
 npmjs.com/package/solaraai shows the version with a provenance badge linking to this repository's
@@ -149,7 +151,6 @@ workflow run.
 - npm: **solaraai → Settings → Publishing access → Require two-factor authentication and disallow
   tokens**. The trusted publisher keeps working; tokens no longer can publish.
 - Revoke any npm token made for the name claim (**Access Tokens**).
-- Deprecate the placeholder, if there was one: `npm deprecate solaraai@0.0.0 "placeholder: use the latest version"`.
 
 ## Every later release
 

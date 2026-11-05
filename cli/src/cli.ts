@@ -3,6 +3,7 @@
 
 import { parseArgs } from 'node:util';
 import { version } from '../package.json' with { type: 'json' };
+import { calendarCommand } from './calendar';
 import { Client, DEFAULT_API_URL, type Sleep } from './client';
 import {
   type Context,
@@ -16,6 +17,7 @@ import {
   waitCommand,
 } from './commands';
 import { EXIT_OK, EXIT_USAGE, SolaraError } from './errors';
+import { FETCH_TIMEOUT_SECONDS, uploadUrlCommand } from './fetch-upload';
 import { createTransport, LIMITS, type Limits } from './http';
 import { loginCommand } from './login';
 import { type CommandSpec, commandHelp, commandSpec, mainHelp, type OptionSpec } from './spec';
@@ -117,6 +119,13 @@ async function runCommand(spec: CommandSpec, ctx: Context, parsed: Parsed): Prom
       return stylesCommand(ctx);
     case 'upload':
       return uploadCommand(ctx, first);
+    case 'upload-url':
+      return uploadUrlCommand(
+        ctx,
+        first,
+        num(values, 'timeout') ?? FETCH_TIMEOUT_SECONDS,
+        str(values, 'idempotency-key'),
+      );
     case 'start':
       return startCommand(ctx, {
         upload: str(values, 'upload') ?? '',
@@ -142,6 +151,8 @@ async function runCommand(spec: CommandSpec, ctx: Context, parsed: Parsed): Prom
       return downloadCommand(ctx, first, str(values, 'out'));
     case 'usage':
       return usageCommand(ctx);
+    case 'calendar':
+      return calendarCommand(ctx, { from: str(values, 'from'), to: str(values, 'to'), limit: num(values, 'limit') });
     case 'login':
       throw new Error('login runs without a context');
   }
