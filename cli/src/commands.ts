@@ -263,3 +263,21 @@ export async function usageCommand(ctx: Context): Promise<number> {
   emit(ctx, usage, lines);
   return EXIT_OK;
 }
+
+/** `videos`: the workspace's videos, most recently changed first, one line each. */
+export async function videosCommand(ctx: Context, search: string | undefined, limit: number): Promise<number> {
+  if (limit < 1 || limit > 100) {
+    throw new SolaraError('--limit must be 1 to 100', '', { exitCode: EXIT_USAGE });
+  }
+  const query = new URLSearchParams({ limit: String(limit) });
+  if (search) query.set('q', search);
+  const page = await ctx.client.call('GET', `/projects?${query.toString()}`);
+  const items = list(page.items);
+  const lines =
+    items.length === 0
+      ? [search ? 'No video matches.' : 'No videos yet.']
+      : items.map((item) => `  video_id ${item.video_id}  ${item.state}  ${JSON.stringify(item.title ?? '')}`);
+  if (typeof page.total === 'number') lines.push(`${page.total} video(s) in the workspace.`);
+  emit(ctx, page, lines);
+  return EXIT_OK;
+}

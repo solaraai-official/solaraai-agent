@@ -28,6 +28,14 @@ const API_KEY_CODES = [
   'not_exported',
   'edit_timing_off',
   'landscape_off',
+  // upload-url (create-project-upload-from-url, get-project-upload)
+  'url_not_allowed',
+  'url_not_public',
+  'url_unreachable',
+  'not_a_video',
+  'video_too_large',
+  'video_too_long',
+  'url_fetches_busy',
 ];
 
 test('every refusal names a next step', () => {

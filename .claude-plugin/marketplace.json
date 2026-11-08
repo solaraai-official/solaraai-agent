@@ -7,9 +7,9 @@
   },
   "plugins": [
     {
-      "name": "solara",
+      "name": "solaraai",
       "source": "./",
-      "description": "Edit a talking-head clip into a captioned short video with Solara AI, then export it. Includes the Solara AI MCP server and the solara-video skill.",
+      "description": "Edit a talking-head clip into a captioned short video with Solara AI, export it, and ask to post it (you approve each post). Includes the Solara AI MCP server and the solara-video skill.",
       "category": "media",
       "tags": ["video", "captions", "reels", "tiktok", "shorts"]
     }

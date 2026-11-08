@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// solara: make edited short videos with Solara AI from a terminal or an AI agent, with an API key.
-// `solara --help` explains everything. Docs: https://docs.solaraai.com/assistants/skill-and-cli
+// solara: make edited short videos with Solara AI from a terminal or an AI agent, signed in with
+// `solara login` (or an API key).
+// `solara --help` explains everything. Docs: https://docs.solaraai.com/agents/skill-and-cli
 
 import { run } from './cli';
 

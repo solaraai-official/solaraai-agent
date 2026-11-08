@@ -88,10 +88,13 @@ export interface CliResult {
   stdout: string;
   stderr: string;
   sleeps: number[];
+  /** The links the CLI opened in a browser. */
+  opened: string[];
 }
 
-/** The CLI, in this process, as an agent runs it: the key in SOLARA_API_KEY, the API at `apiUrl`.
- * Its sleeps are recorded, not slept. */
+/** The CLI, in this process, as an agent runs it: the key in SOLARA_API_KEY, the API at `apiUrl`,
+ * no home folder (so no sign-in) unless the test gives one. Its sleeps and the links it would open
+ * are recorded, not slept or opened. */
 export async function cli(
   argv: string[],
   options: { apiUrl?: string; env?: NodeJS.ProcessEnv; limits?: Limits } = {},
@@ -99,6 +102,7 @@ export async function cli(
   let stdout = '';
   let stderr = '';
   const sleeps: number[] = [];
+  const opened: string[] = [];
   const env: NodeJS.ProcessEnv = {
     PATH: process.env.PATH,
     SOLARA_API_KEY: KEY,
@@ -116,7 +120,10 @@ export async function cli(
     sleep: async (seconds) => {
       sleeps.push(seconds);
     },
+    openUrl: (url) => {
+      opened.push(url);
+    },
     ...(options.limits ? { limits: options.limits } : {}),
   });
-  return { code, stdout, stderr, sleeps };
+  return { code, stdout, stderr, sleeps, opened };
 }
