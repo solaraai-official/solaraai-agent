@@ -39,6 +39,9 @@ const PUBLIC_SOLARA_HOSTS = new Set([
   'api.solaraai.com',
   'docs.solaraai.com',
 ]);
+// This repository's own clone address (cli/package.json's repository.url), which the host shape
+// above also matches because of its `.git`.
+const THIS_REPOSITORY_GIT = 'solaraai-agent.git';
 const PUBLIC_EMAILS = new Set(['contact@solaraai.com', 'git@github.com', 'noreply@github.com']);
 // GitHub's private commit addresses (Settings → Emails → Keep my email addresses private).
 const GITHUB_NOREPLY = /@users\.noreply\.github\.com$/i;
@@ -52,7 +55,7 @@ export const RULES: Rule[] = [
   {
     name: 'a Solara host that is not public',
     pattern: /\b(?:[a-z0-9-]+\.)*solaraai[a-z0-9-]*\.[a-z]{2,}\b/gi,
-    isAllowed: (match) => PUBLIC_SOLARA_HOSTS.has(match.toLowerCase()),
+    isAllowed: (match) => PUBLIC_SOLARA_HOSTS.has(match.toLowerCase()) || match === THIS_REPOSITORY_GIT,
   },
   { name: 'a cluster name', pattern: /\beks-[a-z0-9][a-z0-9-]*/gi },
   // `.internal` as a host's last label (as cloud providers name private hosts), and Kubernetes DNS.
@@ -189,6 +192,7 @@ function selfTest(): number {
   };
   const clean = [
     'https://app.solaraai.com/settings/api-keys and https://docs.solaraai.com',
+    '"url": "git+https://github.com/solaraai-official/solaraai-agent.git"',
     'write to contact@solaraai.com; git remote add origin git@github.com:solaraai-official/x.git',
     'author 12345+someone@users.noreply.github.com, committer noreply@github.com',
     'npx -y solaraai@0.1.0 --version; http://localhost:8080 and http://127.0.0.1:3000',
