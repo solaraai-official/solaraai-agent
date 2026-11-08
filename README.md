@@ -1,157 +1,204 @@
-# Solara AI for AI agents
+# Solara AI MCP server: AI video editing for Claude, ChatGPT and any MCP client
 
-Let your AI agent turn a talking-head recording into an edited short video with
+Your AI agent turns a talking-head recording into an edited, captioned short video with
 [Solara AI](https://solaraai.com): cuts, captions, zooms, b-roll and music in a style you choose.
-The agent uploads the clip, starts the edit and shows you the result. It exports the video only
-after you say yes.
+It shows you the edit, exports only after your yes, and asks before it posts: you approve every post.
 
-This repository has:
+```text
+https://api.solaraai.com/mcp
+```
 
-| Path | What it is |
-| --- | --- |
-| [`skills/solara-video/`](skills/solara-video/) | An [Agent Skill](https://agentskills.io): `SKILL.md`, which teaches the agent Solara's command-line tool, the npm package [`solaraai`](https://www.npmjs.com/package/solaraai). The agent runs it with `npx -y solaraai` (Node.js 20+, nothing else to install) and a Solara API key. |
-| [`.claude-plugin/`](.claude-plugin/), [`.mcp.json`](.mcp.json) | A Claude Code plugin and marketplace: installs the skill and connects the Solara AI MCP server. |
-| [`.cursor-plugin/`](.cursor-plugin/), [`mcp.json`](mcp.json) | The same plugin for Cursor and Grok Bot: the skill and the Solara AI MCP server. |
-| [`assets/`](assets/) | The Solara AI icon. |
-| [`cli/`](cli/) | The source of the `solaraai` CLI, its tests and its build, published to npm from this repository with provenance. |
+A remote MCP server (Streamable HTTP). You sign in to Solara and choose **Allow**: no API key to copy.
 
-## Two ways to connect
+⭐ **[Star this repo][repo]** to follow new tools and agent features as they ship.
 
-- **Sign in (MCP).** Assistants that use remote MCP servers, such as ChatGPT, Claude, Claude Code,
-  Cursor and opencode, connect to `https://api.solaraai.com/mcp` and you sign in to Solara.
-  No key to handle, and the assistant can also ask to post a video, which you approve in Solara.
-  Guides: [docs.solaraai.com/assistants/connect](https://docs.solaraai.com/assistants/connect).
-- **Skill and API key.** For an agent that runs commands on your computer. The CLI
-  (`npx -y solaraai`) reads the key from the environment, so it never appears in the chat, and it
-  never stores or prints it. An API key can't post.
+## Connect in 60 seconds
 
-## What you need
+Every agent below opens Solara in your browser: sign in, check what it asks for, and choose **Allow**.
+Then ask it: *"List the video styles I can use in Solara."*
 
-- A Solara account on a **paid plan** (Essential or Premium). See
-  [solaraai.com/pricing](https://solaraai.com/pricing).
-- For the skill, an **API key**: in Solara, open **Settings → API keys** and choose
-  **Create API key** ([app.solaraai.com/settings/api-keys](https://app.solaraai.com/settings/api-keys)).
-  Solara shows it once. Give it to your agent as the environment variable `SOLARA_API_KEY`:
+### Claude (claude.ai, Claude Desktop, the mobile apps)
 
-  ```bash
-  export SOLARA_API_KEY="sol_live_..."
-  ```
+1. Go to **Customize → Connectors**
+   ([open it](https://claude.ai/customize/connectors?modal=add-custom-connector)), click **+ Add**,
+   then **Add custom connector**.
+2. Name it **Solara AI**, paste `https://api.solaraai.com/mcp` and click **Continue**. Keep the
+   settings Claude fills in, then click **Add** and **Connect**.
+3. Sign in to Solara and choose **Allow**. In a chat, click **+**, then **Connectors**, and switch
+   **Solara AI** on.
 
-  Never paste it into a chat or commit it. Delete a key in the same place when you no longer need it.
-  `npx -y solaraai login` checks it.
-- For the skill, **Node.js 20 or newer** (`npx` comes with it).
+Works on every Claude plan; Claude Free has one custom connector. On Team and Enterprise, an Owner
+adds it in **Organization settings → Connectors** first.
+[Claude guide](https://docs.solaraai.com/agents/claude)
 
-## Install
+### ChatGPT (Business, Enterprise and Edu, on the web)
+
+1. Open [chatgpt.com/plugins](https://chatgpt.com/plugins), select **+**, then **Add custom MCP server**.
+2. Name it **Solara AI** and paste `https://api.solaraai.com/mcp` under **Connection**.
+3. Set authentication to **OAuth**, tick **I understand and want to continue**, choose **Create as a
+   plugin**, then sign in to Solara and choose **Allow**. In a chat, type `@` and pick **Solara AI**.
+
+ChatGPT edits and posts only on its Business, Enterprise and Edu plans, on the web; in a Business
+workspace, an admin or owner adds it. On ChatGPT Pro it can only read, and OpenAI doesn't list Plus
+or Free. [ChatGPT guide](https://docs.solaraai.com/agents/chatgpt)
 
 ### Claude Code
 
-Install the plugin (the skill plus the Solara AI MCP server):
+The plugin adds the MCP server and the `solara-video` skill:
 
 ```text
-/plugin marketplace add solaraai-official/solara-agent-skills
-/plugin install solara@solaraai
+/plugin marketplace add solaraai-official/solaraai-agent
+/plugin install solaraai@solaraai
 ```
 
-Then type `/mcp`, pick **plugin:solara:solara** and sign in to use the MCP server. Only want one
-of the two?
+Then type `/mcp`, pick **plugin:solaraai:solara**, sign in and choose **Allow**. Or, without the plugin:
 
 ```bash
-# The MCP server alone
 claude mcp add --transport http --scope user solara https://api.solaraai.com/mcp
-# The skill alone
-npx skills add solaraai-official/solara-agent-skills --skill solara-video -a claude-code -g
+claude mcp login solara
 ```
 
-### Cursor and Grok Bot
+[Claude Code guide](https://docs.solaraai.com/agents/claude-code)
 
-The plugin (the skill plus the Solara AI MCP server) is also in Cursor's plugin format, which Grok
-Bot reads too. Once **Solara AI** is listed in their marketplaces, install it there (in Cursor:
-**Customize**, search for Solara AI, **Install**), and sign in to Solara the first time the agent
-uses the server.
+### Cursor
 
-Until then, or to try this repository's version: copy it to `~/.cursor/plugins/local/solara`,
-then run **Developer: Reload Window**. Only want one of the two?
-
-```bash
-# The skill alone
-npx skills add solaraai-official/solara-agent-skills --skill solara-video -a cursor -g
-```
-
-For the MCP server alone, add it to `~/.cursor/mcp.json`:
+Add Solara to `~/.cursor/mcp.json` (every project) or `.cursor/mcp.json` (one project):
 
 ```json
-{ "mcpServers": { "solara": { "url": "https://api.solaraai.com/mcp" } } }
+{
+  "mcpServers": {
+    "solara": { "url": "https://api.solaraai.com/mcp" }
+  }
+}
 ```
 
-### OpenClaw
+Open Cursor's MCP settings on its **Customize** page: Solara is listed and asks you to sign in.
+[Cursor guide](https://docs.solaraai.com/agents/cursor)
 
-```bash
-npx skills add solaraai-official/solara-agent-skills --skill solara-video -a openclaw -g
-```
+### Other agents
 
-Give it the key in `openclaw.json`; OpenClaw passes it to the skill as `SOLARA_API_KEY`:
+- **opencode:** add `"solara": { "type": "remote", "url": "https://api.solaraai.com/mcp" }` under
+  `mcp` in `opencode.json`, then run `opencode mcp auth solara`.
+  [Guide](https://docs.solaraai.com/agents/opencode)
+- **Grok Bot:** send your Bot `Add this MCP server: https://api.solaraai.com/mcp`, confirm, then
+  choose **Connect** on the card. [Guide](https://docs.solaraai.com/agents/grok-bot)
+- **Any MCP client:** add a remote MCP server with the address above. Sign-in is OAuth, and the
+  agent asks for every permission at once.
+  [How connecting works](https://docs.solaraai.com/agents/connect)
 
-```json5
-{ skills: { entries: { "solara-video": { apiKey: "sol_live_..." } } } }
-```
+### Your recording
 
-### opencode
+Claude Code, Cursor, opencode and Claude Desktop sessions that can open your files upload the
+recording themselves. ChatGPT, claude.ai in your browser and Grok Bot can't: paste a public link
+instead (a Google Drive link shared as *Anyone with the link*, a Dropbox link, or a file on a
+website), and Solara fetches it. Clips can be up to 10 minutes long (90 seconds on the free try).
 
-```bash
-npx skills add solaraai-official/solara-agent-skills --skill solara-video -a opencode -g
-```
+## What your agent can ask for
 
-Or connect the MCP server instead: [docs.solaraai.com/assistants/opencode](https://docs.solaraai.com/assistants/opencode).
+| Permission | What the agent can do |
+| --- | --- |
+| Read | See your videos, styles, calendar and whether your posts went out |
+| Edit | Upload footage and photos, and make and change videos |
+| Export | Export a video, which uses one of your plan's videos, as it does in the app |
+| Ask to post | Ask to post or schedule a video, photos or a text post. You approve each one in Solara |
 
-### Codex
+## Tools
 
-```bash
-npx skills add solaraai-official/solara-agent-skills --skill solara-video -a codex -g
-```
+| Step | Tools | What they do |
+| --- | --- | --- |
+| Find | `list_styles`, `list_videos`, `list_folders`, `list_ready_videos` | The styles and caption styles, your videos and folders, finished videos not posted yet (read-only) |
+| Bring in a recording | `start_upload`, `finish_upload`, `upload_from_url` | Upload a file from the agent's computer, or have Solara fetch a public link |
+| Edit | `create_video`, `get_status`, `get_preview` | Start an edit in a style, caption style, speed, pause length and format (9:16 or 16:9), follow it, read the edit and its transcript |
+| Change | `apply_edit`, `undo_agent_changes`, `swap_picture`, `new_music_track` | Change settings, captions, shots and zooms (one undo step each), take back the agent's own changes, a new b-roll picture or music track |
+| Organize | `create_folder`, `move_videos` | Make a folder and file videos in it |
+| Export | `export_video`, `get_download` | Render the MP4 after your yes, then download it |
+| Post | `list_social_accounts`, `prepare_publish`, `prepare_photo_post`, `start_image_upload`, `finish_image_upload`, `prepare_text_post`, `create_post_from_upload` | Ask to post a video Solara edited, your own finished video as it is, photos or a text post, now or at a time you pick, with a caption the agent writes from what you said or one you give it. Nothing goes out until you approve |
+| Follow up | `get_publish_status`, `list_scheduled_posts` | Where a request stands, and what's on your calendar (read-only) |
 
-### Any other agent
+Tools that change or spend something of yours are marked destructive, so your agent can ask you
+first. Every tool, with its inputs: [docs.solaraai.com/mcp/overview](https://docs.solaraai.com/mcp/overview).
 
-Copy `skills/solara-video/` into the folder your agent loads skills from, or point it at
-`skills/solara-video/SKILL.md`. If the agent runs commands in a sandbox, allow it to reach
-`api.solaraai.com` and `registry.npmjs.org` (and set `HTTPS_PROXY` if it goes through a proxy).
-
-## Try it
+## Things to ask
 
 ```text
-Turn talk.mp4 into a 30-second Reel with Solara, then show me the edit before you export it.
+Turn this recording into a Reel in the Brass style: <a Google Drive or Dropbox link>
+Make the captions bigger, add music and fix how my name is spelled.
+Switch to Energy Pill captions and speed it up a little.
+Export it, write a caption and schedule it for Instagram and TikTok on Tuesday at 9 AM.
+Post it again on Thursday on LinkedIn, with a longer caption for LinkedIn.
+What's scheduled this week?
+Which of my videos aren't posted yet?
 ```
 
-## What the agent will and won't do
+## Nothing posts without your approval
 
-- It shows you the edit link and waits for your yes before exporting.
-- Each export uses one of your plan's videos for the month, so it exports once per approved edit.
-- With an API key it never posts, changes billing or touches your account.
-- It never prints, logs or commits your key.
+- Your agent can only **ask** to post. Each post waits for you in Solara, where you see the video,
+  the caption, the platforms and the time, and approve it or not.
+- It shows you the edit link and waits for your yes before it exports.
+- It sees only your workspace. It never touches billing or your account, and it can't connect or
+  disconnect your social accounts.
+- Disconnect it any time: in Solara, open the menu under your name, then **Connected apps**.
 
-Full guide: [docs.solaraai.com/assistants/skill-and-cli](https://docs.solaraai.com/assistants/skill-and-cli).
+Posting goes to the Instagram, TikTok, Facebook and LinkedIn accounts you connect in Solara.
+Videos can be in English or Hebrew.
 
-## Support, privacy and security
+## What you need
 
-- Help: [solaraai.com/contact](https://solaraai.com/contact), or the support chat in the app.
-- [Privacy policy](https://solaraai.com/privacy-policy) and [terms](https://solaraai.com/terms-of-service).
-- Found a security problem? Report it privately, never in a public issue: see
-  [SECURITY.md](SECURITY.md). If a key leaks, delete it in Settings → API keys.
+- A Solara account. AI agents work on every plan, within its limits. On the free try your first
+  download is free; posting a video Solara edited comes with a plan
+  ([solaraai.com/pricing](https://solaraai.com/pricing)).
+- An AI agent that can use a remote MCP server.
+
+## The skill and the CLI, for agents that run commands
+
+```bash
+npx skills add solaraai-official/solaraai-agent --skill solara-video -g
+npx -y solaraai login      # Node.js 20 or newer, nothing to install
+npx -y solaraai --help     # every command
+```
+
+The [`solara-video`][skill] skill teaches an agent Solara's CLI, the npm package
+[`solaraai`](https://www.npmjs.com/package/solaraai). The CLI makes, edits and exports videos; it
+never posts. It never prints a key or a token.
+
+## Learn more
+
+- [solaraai.com/agents](https://solaraai.com/agents): what an AI agent can do with Solara
+- [docs.solaraai.com/agents/connect](https://docs.solaraai.com/agents/connect): every connect guide
+- [docs.solaraai.com/mcp/overview](https://docs.solaraai.com/mcp/overview): every tool
+- Help: [solaraai.com/contact](https://solaraai.com/contact), or the support chat in the app
+- [Privacy policy](https://solaraai.com/privacy-policy) and [terms](https://solaraai.com/terms-of-service)
+- A security problem? Report it privately, never in a public issue: see [SECURITY.md][security].
+
+## In this repository
+
+| Path | What it is |
+| --- | --- |
+| [.claude-plugin][claude-plugin], [.mcp.json][claude-mcp] | The Claude Code plugin and marketplace: the MCP server and the skill |
+| [.cursor-plugin][cursor-plugin], [mcp.json][cursor-mcp] | The same plugin in Cursor's format |
+| [skills/solara-video][skill] | The skill: its `SKILL.md` teaches an agent Solara's CLI |
+| [cli][cli] | The source of the `solaraai` CLI, published to npm from here with provenance |
+
+The MCP server itself is hosted by Solara at `https://api.solaraai.com/mcp`; nothing runs on your
+machine.
 
 ## For maintainers
 
-The CLI in `cli/` and the skill in `skills/solara-video/` are copies: their source is Solara's
-private monorepo, which syncs them here (`just solara-cli-sync-public`). Change them there, never
-here, or the next sync undoes the change.
-
-This repository runs GitHub Actions on purpose. The monorepo runs none (its CI is elsewhere, by
-policy), but npm signs provenance only for a package published from a public repository's cloud CI,
-so the `solaraai` package is tested and published here: [`ci.yml`](.github/workflows/ci.yml)
-checks every pull request, [`safety.yml`](.github/workflows/safety.yml) scans the whole history for
-secrets and internal names and the workflows for unsafe patterns,
-[`scorecard.yml`](.github/workflows/scorecard.yml) runs OpenSSF Scorecard weekly, and
-[`publish.yml`](.github/workflows/publish.yml) publishes a release tagged `cli-v<version>` through
-npm trusted publishing (OIDC, no npm token). Setup and releases: [MAINTAINERS.md](MAINTAINERS.md).
+The CLI, the skill, the plugin manifests, this README, SECURITY.md and MAINTAINERS.md are copies:
+their source is Solara's private monorepo, which syncs them here. Change them there, never here, or
+the next sync undoes the change. Releases and checks: [MAINTAINERS.md][maintainers].
 
 ## License
 
-[MIT](LICENSE)
+See [LICENSE][license].
+
+[repo]: https://github.com/solaraai-official/solaraai-agent
+[skill]: https://github.com/solaraai-official/solaraai-agent/tree/main/skills/solara-video
+[claude-plugin]: https://github.com/solaraai-official/solaraai-agent/tree/main/.claude-plugin
+[claude-mcp]: https://github.com/solaraai-official/solaraai-agent/blob/main/.mcp.json
+[cursor-plugin]: https://github.com/solaraai-official/solaraai-agent/tree/main/.cursor-plugin
+[cursor-mcp]: https://github.com/solaraai-official/solaraai-agent/blob/main/mcp.json
+[cli]: https://github.com/solaraai-official/solaraai-agent/tree/main/cli
+[security]: https://github.com/solaraai-official/solaraai-agent/blob/main/SECURITY.md
+[maintainers]: https://github.com/solaraai-official/solaraai-agent/blob/main/MAINTAINERS.md
+[license]: https://github.com/solaraai-official/solaraai-agent/blob/main/LICENSE

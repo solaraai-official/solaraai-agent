@@ -5,7 +5,7 @@
 Please report security problems privately, never in a public issue, pull request or discussion.
 
 - **GitHub:** this repository's **Security** tab → **Report a vulnerability**
-  ([direct link](https://github.com/solaraai-official/solara-agent-skills/security/advisories/new)).
+  ([direct link](https://github.com/solaraai-official/solaraai-agent/security/advisories/new)).
   Only Solara's maintainers see the report.
 - **Email:** [contact@solaraai.com](mailto:contact@solaraai.com), with "Security" in the subject.
 
@@ -25,9 +25,14 @@ If a Solara API key was exposed (pasted in a chat, committed, logged), delete it
 **Settings → API keys** and create a new one. That stops the old key at once. The CLI never prints,
 logs or stores the key: if you saw it do so, that is a vulnerability, so please report it.
 
+A sign-in from `solaraai login` is stored only in `~/.config/solaraai/credentials.json`, readable by
+your user alone. If that file was exposed, run `solaraai logout`, or disconnect **Solara CLI** in
+Solara under **Settings → Connected apps**: either ends the sign-in. The CLI never prints or logs
+it either.
+
 ## How releases are protected
 
-The CLI is published only from this repository's [`publish.yml`](.github/workflows/publish.yml),
+The CLI is published only from this repository's [`publish.yml`](https://github.com/solaraai-official/solaraai-agent/blob/main/.github/workflows/publish.yml),
 through npm trusted publishing (no npm token exists) and with provenance: on
 [npmjs.com/package/solaraai](https://www.npmjs.com/package/solaraai), each version links to the
 workflow run that built it. `npm audit signatures` verifies it in a project that installs it.

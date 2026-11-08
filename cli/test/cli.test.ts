@@ -46,38 +46,14 @@ describe('help', () => {
   });
 });
 
-describe('the key', () => {
-  test('without one, a command says where to get one', async () => {
+describe('signing in', () => {
+  test('with no sign-in and no key, a command asks for the person to sign in, never for a key', async () => {
     const result = await cli(['styles'], { apiUrl: api.url, env: { SOLARA_API_KEY: '' } });
     expect(result.code).toBe(EXIT_USAGE);
-    expect(result.stderr).toContain('Settings -> API keys');
+    expect(result.stderr).toContain('solara: not signed in to Solara');
+    expect(result.stderr).toContain('next: Run `solara login` yourself, give the person the link and the code');
+    expect(result.stderr).not.toMatch(/paste|give it to you/i);
     expect(api.calls).toEqual([]);
-  });
-
-  test('login explains where the key comes from, and stores nothing', async () => {
-    const result = await cli(['login'], { apiUrl: api.url, env: { SOLARA_API_KEY: '' } });
-    expect(result.code).toBe(EXIT_USAGE);
-    expect(result.stdout).toContain('export SOLARA_API_KEY="sol_live_..."');
-    expect(result.stdout).toContain(`${api.url}/settings/api-keys`);
-    expect(result.stdout).toContain('SOLARA_API_KEY is not set.');
-    expect(api.calls).toEqual([]);
-  });
-
-  test('login checks a key with one read and never prints it', async () => {
-    api.on('GET', '/api/v1/projects/usage', { status: 200, json: { paid: true, exports_left: 7 } });
-    const works = await cli(['login'], { apiUrl: api.url });
-    expect(works.code).toBe(EXIT_OK);
-    expect(works.stdout).toContain(`SOLARA_API_KEY works with ${api.url}. Exports left this month: 7.`);
-    expect(works.stdout + works.stderr).not.toContain(KEY);
-
-    api.on('GET', '/api/v1/projects/usage', {
-      status: 401,
-      json: { detail: 'this API key was revoked', code: 'api_key_revoked' },
-    });
-    const revoked = await cli(['login'], { apiUrl: api.url });
-    expect(revoked.code).toBe(EXIT_REFUSED);
-    expect(revoked.stderr).toContain('next: This key was revoked.');
-    expect(revoked.stdout + revoked.stderr).not.toContain(KEY);
   });
 });
 

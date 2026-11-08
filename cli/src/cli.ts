@@ -3,6 +3,7 @@
 
 import { parseArgs } from 'node:util';
 import { version } from '../package.json' with { type: 'json' };
+import { calendarCommand } from './calendar';
 import { Client, DEFAULT_API_URL, type Sleep } from './client';
 import {
   type Context,
@@ -13,11 +14,15 @@ import {
   stylesCommand,
   uploadCommand,
   usageCommand,
+  videosCommand,
   waitCommand,
 } from './commands';
+import { CredentialStore, configDir } from './credentials';
 import { EXIT_OK, EXIT_USAGE, SolaraError } from './errors';
-import { createTransport, LIMITS, type Limits } from './http';
-import { loginCommand } from './login';
+import { FETCH_TIMEOUT_SECONDS, uploadUrlCommand } from './fetch-upload';
+import { createTransport, LIMITS, type Limits, type Transport } from './http';
+import { type AuthIo, loginCommand, logoutCommand, notSignedIn, openInBrowser, whoamiCommand } from './login';
+import { type Credential, keyCredential, loginCredential } from './oauth';
 import { type CommandSpec, commandHelp, commandSpec, mainHelp, type OptionSpec } from './spec';
 import type { WaitUntil } from './video';
 
@@ -29,6 +34,8 @@ export interface Io {
   stderr: (text: string) => void;
   sleep?: Sleep;
   limits?: Limits;
+  /** Opens a link in this machine's browser; tests record it. */
+  openUrl?: (url: string) => void;
 }
 
 /** How this run was started, so every command it prints can be pasted: through npx (`npm exec`),
@@ -81,7 +88,8 @@ function parse(spec: CommandSpec, argv: string[], cli: string): Parsed {
   const help = parsed.values.help === true;
   if (help) return { args: [], values: {}, json: false, help };
   const args = parsed.positionals;
-  if (args.length !== spec.args.length) {
+  const required = spec.args.filter((arg) => !arg.optional).length;
+  if (args.length < required || args.length > spec.args.length) {
     const wanted = spec.args.map((arg) => `<${arg.name}>`).join(' ') || 'no arguments';
     throw usageError(`${spec.name} takes ${wanted}; got ${args.length ? args.join(' ') : 'none'}`, spec, cli);
   }
@@ -117,6 +125,13 @@ async function runCommand(spec: CommandSpec, ctx: Context, parsed: Parsed): Prom
       return stylesCommand(ctx);
     case 'upload':
       return uploadCommand(ctx, first);
+    case 'upload-url':
+      return uploadUrlCommand(
+        ctx,
+        first,
+        num(values, 'timeout') ?? FETCH_TIMEOUT_SECONDS,
+        str(values, 'idempotency-key'),
+      );
     case 'start':
       return startCommand(ctx, {
         upload: str(values, 'upload') ?? '',
@@ -134,6 +149,8 @@ async function runCommand(spec: CommandSpec, ctx: Context, parsed: Parsed): Prom
       });
     case 'status':
       return statusCommand(ctx, first);
+    case 'videos':
+      return videosCommand(ctx, str(values, 'search'), num(values, 'limit') ?? 20);
     case 'wait':
       return waitCommand(ctx, first, (str(values, 'until') ?? 'edit') as WaitUntil, num(values, 'timeout') ?? 1800);
     case 'export':
@@ -142,8 +159,12 @@ async function runCommand(spec: CommandSpec, ctx: Context, parsed: Parsed): Prom
       return downloadCommand(ctx, first, str(values, 'out'));
     case 'usage':
       return usageCommand(ctx);
+    case 'calendar':
+      return calendarCommand(ctx, { from: str(values, 'from'), to: str(values, 'to'), limit: num(values, 'limit') });
     case 'login':
-      throw new Error('login runs without a context');
+    case 'logout':
+    case 'whoami':
+      throw new Error(`${spec.name} runs without a context`);
   }
 }
 
@@ -174,28 +195,65 @@ function answerWithoutCommand(argv: string[], cli: string, say: (line: string) =
   return null;
 }
 
-/** The API with the environment's key; null when SOLARA_API_KEY isn't a Solara key. */
-function clientFor(io: Io, cli: string): Client | null {
-  const apiUrl = io.env.SOLARA_API_URL || DEFAULT_API_URL;
+/** The API's address, refused unless it is http(s). */
+function apiUrlOf(io: Io): string {
+  const apiUrl = (io.env.SOLARA_API_URL || DEFAULT_API_URL).replace(/\/+$/, '');
   if (!/^https?:\/\/[^/]/.test(apiUrl)) {
     throw new SolaraError(`SOLARA_API_URL isn't an http(s) URL: ${apiUrl}`, 'Fix or unset SOLARA_API_URL.', {
       exitCode: EXIT_USAGE,
     });
   }
-  const apiKey = io.env.SOLARA_API_KEY?.trim() ?? '';
-  if (!apiKey.startsWith('sol_')) return null;
-  return new Client({
-    apiKey,
-    apiUrl,
-    transport: createTransport(io.env, io.limits ?? LIMITS),
-    sleep: io.sleep ?? ((seconds) => new Promise((done) => setTimeout(done, seconds * 1000))),
-    log: (line) => io.stderr(`${line}\n`),
-    userAgent: `solaraai-cli/${VERSION} (node ${process.versions.node})`,
-    cli,
-  });
+  return apiUrl;
 }
 
-/** Runs one command line; returns its exit code. Never prints the API key. */
+/** Everything a command needs to reach Solara, and how it signs in. */
+interface Wiring {
+  apiUrl: string;
+  transport: Transport;
+  store: CredentialStore | null;
+  userAgent: string;
+  sleep: Sleep;
+  client: (auth: Credential) => Client;
+}
+
+function wire(io: Io, cli: string): Wiring {
+  const apiUrl = apiUrlOf(io);
+  const transport = createTransport(io.env, io.limits ?? LIMITS);
+  const dir = configDir(io.env);
+  const userAgent = `solaraai-cli/${VERSION} (node ${process.versions.node})`;
+  const sleep: Sleep = io.sleep ?? ((seconds) => new Promise((done) => setTimeout(done, seconds * 1000)));
+  return {
+    apiUrl,
+    transport,
+    store: dir ? new CredentialStore(dir) : null,
+    userAgent,
+    sleep,
+    client: (auth) =>
+      new Client({ auth, apiUrl, transport, sleep, log: (line) => io.stderr(`${line}\n`), userAgent, cli }),
+  };
+}
+
+/**
+ * How this run signs in: the stored sign-in for this API wins, then SOLARA_API_KEY (a Solara key);
+ * null when neither is there.
+ */
+async function credentialFor(io: Io, w: Wiring, cli: string): Promise<Credential | null> {
+  const stored = w.store ? await w.store.read(w.apiUrl) : null;
+  if (stored && w.store) {
+    return loginCredential(stored, {
+      store: w.store,
+      apiUrl: w.apiUrl,
+      transport: w.transport,
+      userAgent: w.userAgent,
+      cli,
+      now: Date.now,
+    });
+  }
+  const apiKey = io.env.SOLARA_API_KEY?.trim() ?? '';
+  return apiKey.startsWith('sol_') ? keyCredential(apiKey) : null;
+}
+
+/** Runs one command line; returns its exit code. Never prints a key or a token. */
 export async function run(argv: string[], io: Io): Promise<number> {
   const cli = invokedAs(io.env);
   const say = (line: string) => io.stdout(`${line}\n`);
@@ -212,18 +270,31 @@ export async function run(argv: string[], io: Io): Promise<number> {
       say(commandHelp(spec, cli));
       return EXIT_OK;
     }
-    const client = clientFor(io, cli);
-    if (spec.name === 'login') {
-      return await loginCommand({ apiUrl: io.env.SOLARA_API_URL || DEFAULT_API_URL, env: io.env, cli, say, client });
+    const w = wire(io, cli);
+    const note = (line: string) => io.stderr(`${line}\n`);
+    const authIo: AuthIo = {
+      apiUrl: w.apiUrl,
+      env: io.env,
+      cli,
+      json,
+      say,
+      note,
+      transport: w.transport,
+      userAgent: w.userAgent,
+      sleep: w.sleep,
+      store: w.store,
+      openUrl: io.openUrl ?? openInBrowser,
+      client: w.client,
+    };
+    if (spec.name === 'login') return await loginCommand(authIo, str(parsed.values, 'browser') ?? 'auto');
+    if (spec.name === 'logout') return await logoutCommand(authIo);
+    const auth = await credentialFor(io, w, cli);
+    const client = auth ? w.client(auth) : null;
+    if (spec.name === 'whoami' || (spec.name === 'status' && parsed.args.length === 0)) {
+      return await whoamiCommand(authIo, client);
     }
-    if (!client) {
-      io.stderr('solara: SOLARA_API_KEY is not set to a Solara API key (sol_live_...).\n');
-      io.stderr(
-        `next: ask the person to create one in Settings -> API keys and give it to you as SOLARA_API_KEY (\`${cli} login\` explains).\n`,
-      );
-      return EXIT_USAGE;
-    }
-    const ctx: Context = { client, env: io.env, cli, json, say, note: (line) => io.stderr(`${line}\n`) };
+    if (!client) throw notSignedIn(cli);
+    const ctx: Context = { client, env: io.env, cli, json, say, note };
     return await runCommand(spec, ctx, parsed);
   } catch (error) {
     if (!(error instanceof SolaraError)) throw error;

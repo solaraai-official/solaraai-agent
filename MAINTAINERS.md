@@ -1,13 +1,14 @@
-# Maintaining solara-agent-skills
+# Maintaining solaraai-agent
 
 This repository is private until launch day, then public. It holds the Solara AI skill and the
 plugin (for Claude Code, Cursor and Grok Bot), and it is where the npm package `solaraai` (the CLI
-in `cli/`) is published from, with provenance. The CLI's and the
-skill's source is Solara's private monorepo (`packages/node/solara-cli`), copied here by
-`just solara-cli-sync-public <checkout>`: change them there, never here.
+in `cli/`) is published from, with provenance. The source of the CLI, the skill, the plugin
+files, `README.md`, `SECURITY.md` and this file is Solara's private monorepo
+(`packages/node/solara-cli`), copied here by `just solara-cli-sync-public <checkout>`: change them
+there, never here.
 
 How a release reaches npm: a GitHub release tagged `cli-v<version>` runs
-[`publish.yml`](.github/workflows/publish.yml), which waits for a reviewer's approval on the `npm`
+[`publish.yml`](https://github.com/solaraai-official/solaraai-agent/blob/main/.github/workflows/publish.yml), which waits for a reviewer's approval on the `npm`
 environment, tests and builds the CLI, and runs `npm publish --provenance`. npm accepts it because
 of the trusted publisher set up below: GitHub gives the job a short-lived OIDC token, and no npm
 token exists anywhere.
@@ -15,14 +16,16 @@ token exists anywhere.
 ## One-time setup (the owner)
 
 Do steps 4 and 5 within two days of each other: npm expires a trusted publisher that has not
-published within two days of being created.
+published within two days of being created. Both wait for launch day: `npm publish --provenance`
+fails from a private repository, and Actions are off until then.
 
 ### 1. npm: the account and the package
 
 - An npm account with two-factor authentication on, owning the package `solaraai`.
-- The package must already exist before a trusted publisher can be added to it (npm's rule). If
-  the name was claimed by publishing a placeholder (say `0.0.0`) by hand, that is enough. The
-  placeholder is deprecated in step 6.
+- The package must already exist before a trusted publisher can be added to it (npm's rule). The
+  name is claimed by publishing `0.2.0` once by hand, signed in to npm, from the monorepo's
+  `packages/node/solara-cli`: `npm publish --access public`. It has no provenance; every later
+  version comes from this repository and has it.
 
 ### 2. GitHub: the repository, private until launch day
 
@@ -41,9 +44,9 @@ git config user.email contact@solaraai.com
 git add .
 git commit -m "Solara AI skill, plugin and the solaraai CLI"
 
-gh repo create solaraai-official/solara-agent-skills --private --source . --push \
+gh repo create solaraai-official/solaraai-agent --private --source . --push \
   --description "Solara AI for AI agents: the skill, the plugin and the solaraai CLI"
-gh api -X PUT repos/solaraai-official/solara-agent-skills/actions/permissions -F enabled=false
+gh api -X PUT repos/solaraai-official/solaraai-agent/actions/permissions -F enabled=false
 ```
 
 **Before every push and before it goes public, run every check on your machine**, over the whole
@@ -72,9 +75,9 @@ then `git push --force`).
 **On launch day**, after a fresh sync and the checks above:
 
 ```bash
-gh repo edit solaraai-official/solara-agent-skills --visibility public \
+gh repo edit solaraai-official/solaraai-agent --visibility public \
   --accept-visibility-change-consequences
-gh api -X PUT repos/solaraai-official/solara-agent-skills/actions/permissions -F enabled=true
+gh api -X PUT repos/solaraai-official/solaraai-agent/actions/permissions -F enabled=true
 ```
 
 `.gitignore` keeps `node_modules/`, `dist/` and packed tarballs out. The workflows run on the next
@@ -107,7 +110,7 @@ field is case-sensitive, and npm does not check them until a publish):
 | Field | Value |
 | --- | --- |
 | Organization or user | `solaraai-official` |
-| Repository | `solara-agent-skills` |
+| Repository | `solaraai-agent` |
 | Workflow filename | `publish.yml` |
 | Environment name | `npm` |
 | Allowed actions | tick **npm publish** (`npm stage publish` is always allowed) |
@@ -115,7 +118,7 @@ field is case-sensitive, and npm does not check them until a publish):
 Or from a terminal, signed in to npm (npm 11.15.0 or newer, two-factor authentication):
 
 ```bash
-npm trust github solaraai --repo solaraai-official/solara-agent-skills \
+npm trust github solaraai --repo solaraai-official/solaraai-agent \
   --file publish.yml --env npm --allow-publish
 npm trust list solaraai
 ```
@@ -125,20 +128,20 @@ npm trust list solaraai
 ### 5. The first release
 
 ```bash
-grep '"version"' cli/package.json        # 0.1.0
-gh release create cli-v0.1.0 --repo solaraai-official/solara-agent-skills --target main \
-  --title "solaraai 0.1.0" --notes "The first release of the Solara CLI: npx -y solaraai --help"
+grep '"version"' cli/package.json        # newer than 0.2.0, which npm already has (step 1)
+gh release create cli-v<version> --repo solaraai-official/solaraai-agent --target main \
+  --title "solaraai <version>" --notes "The Solara CLI: npx -y solaraai --help"
 ```
 
-(Or **Releases → Draft a new release**, tag `cli-v0.1.0` on `main`, **Publish release**.) Then, in
-**Actions → Publish the CLI to npm**, approve the `npm` deployment. The job fails before publishing
-if the tag is not `cli-v` + the version in `cli/package.json`.
+(Or **Releases → Draft a new release**, tag `cli-v<version>` on `main`, **Publish release**.)
+Then, in **Actions → Publish the CLI to npm**, approve the `npm` deployment. The job fails before
+publishing if the tag is not `cli-v` + the version in `cli/package.json`.
 
 Check it:
 
 ```bash
-npm view solaraai version                # 0.1.0
-npx -y solaraai@0.1.0 --version          # solaraai 0.1.0
+npm view solaraai version                # <version>
+npx -y solaraai@<version> --version      # solaraai <version>
 ```
 
 npmjs.com/package/solaraai shows the version with a provenance badge linking to this repository's
@@ -149,7 +152,6 @@ workflow run.
 - npm: **solaraai → Settings → Publishing access → Require two-factor authentication and disallow
   tokens**. The trusted publisher keeps working; tokens no longer can publish.
 - Revoke any npm token made for the name claim (**Access Tokens**).
-- Deprecate the placeholder, if there was one: `npm deprecate solaraai@0.0.0 "placeholder: use the latest version"`.
 
 ## Every later release
 
@@ -167,9 +169,11 @@ tag, and release again (npm never accepts the same version twice).
 ## The skill and the plugin
 
 Changes to `skills/solara-video/SKILL.md` also come from the monorepo (`just
-solara-cli-sync-public`). The plugin and marketplace manifests live only here: `.claude-plugin/`
-with `.mcp.json` for Claude Code, `.cursor-plugin/` with `mcp.json` for Cursor and Grok Bot. Both
-plugins are named `solara` (an id: never rename it) and shown as **Solara AI**, and both connect
+solara-cli-sync-public`), and so do the plugin and marketplace manifests: `.claude-plugin/`
+with `.mcp.json` for Claude Code, `.cursor-plugin/` with `mcp.json` for Cursor and Grok Bot. The
+Claude Code plugin is named `solaraai` (renamed from `solara` before launch, so installs are
+`/plugin install solaraai@solaraai`) and the Cursor plugin `solara`; both names are ids, never
+rename them again. Both are shown as **Solara AI**, and both connect
 the remote server `https://api.solaraai.com/mcp` (streamable HTTP, the person signs in with OAuth;
 nothing runs locally). Keep `version` the same in both `plugin.json` files: Cursor's validator
 fails when they differ. CI runs `claude plugin validate . --strict` on the Claude Code manifests and
@@ -228,7 +232,7 @@ open-source plugins it has reviewed):
    (`solaraai`), the website (`https://solaraai.com`), a logotype URL, 1:1 SVG or PNG with a
    background plate (`https://app.solaraai.com/solara-connector-icon-512.png`), where to list it
    (tick Grok Bot and Cursor, and Grok), the MCP server URL or public GitHub repository (the
-   repository, `https://github.com/solaraai-official/solara-agent-skills`, so the skill is
+   repository, `https://github.com/solaraai-official/solaraai-agent`, so the skill is
    included), a brief description, and testing instructions. Reviewers need a Solara account on a
    paid plan to test: give them one in the testing instructions, never in this repository.
 3. Or, for Cursor alone, submit the repository at

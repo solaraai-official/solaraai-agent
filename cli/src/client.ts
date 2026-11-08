@@ -1,7 +1,9 @@
-// The Solara API with an API key: one call, its retries, and a refusal turned into a next step.
+// The Solara API with a sign-in or an API key: one call, its retries, and a refusal turned into a
+// next step.
 
 import { type JsonObject, nextStepFor, SolaraError } from './errors';
 import { type HttpAnswer, NoAnswerError, type Transport } from './http';
+import type { Credential } from './oauth';
 
 export const DEFAULT_API_URL = 'https://api.solaraai.com';
 export const WRITE_RETRIES = 3;
@@ -11,7 +13,8 @@ const MAX_RETRY_WAIT_SECONDS = 60;
 export type Sleep = (seconds: number) => Promise<void>;
 
 export interface ClientOptions {
-  apiKey: string;
+  /** The stored sign-in or the environment's key; never printed. */
+  auth: Credential;
   apiUrl: string;
   transport: Transport;
   sleep: Sleep;
@@ -62,11 +65,11 @@ export class Client {
   readonly sleep: Sleep;
   readonly cli: string;
   readonly userAgent: string;
-  private readonly apiKey: string;
+  readonly auth: Credential;
   private readonly log: (line: string) => void;
 
   constructor(options: ClientOptions) {
-    this.apiKey = options.apiKey;
+    this.auth = options.auth;
     this.apiUrl = options.apiUrl.replace(/\/+$/, '');
     this.transport = options.transport;
     this.sleep = options.sleep;
@@ -75,9 +78,9 @@ export class Client {
     this.cli = options.cli;
   }
 
-  private headers(hasBody: boolean, idempotencyKey?: string): Record<string, string> {
+  private headers(bearer: string, hasBody: boolean, idempotencyKey?: string): Record<string, string> {
     const headers: Record<string, string> = {
-      Authorization: `Bearer ${this.apiKey}`,
+      Authorization: `Bearer ${bearer}`,
       Accept: 'application/json',
       'User-Agent': this.userAgent,
     };
@@ -86,11 +89,18 @@ export class Client {
     return headers;
   }
 
-  private async once(method: string, path: string, body: unknown, idempotencyKey?: string): Promise<HttpAnswer> {
+  private async once(
+    bearer: string,
+    method: string,
+    path: string,
+    body: unknown,
+    idempotencyKey?: string,
+  ): Promise<HttpAnswer> {
     const data = body === undefined ? null : Buffer.from(JSON.stringify(body));
     const url = `${this.apiUrl}/api/v1${path}`;
     try {
-      return await this.transport({ method, url, headers: this.headers(data !== null, idempotencyKey), body: data });
+      const headers = this.headers(bearer, data !== null, idempotencyKey);
+      return await this.transport({ method, url, headers, body: data });
     } catch (error) {
       if (!(error instanceof NoAnswerError)) throw error;
       const detail = JSON.stringify({ detail: `no answer from Solara (${error.message})` });
@@ -98,15 +108,25 @@ export class Client {
     }
   }
 
+  /** One request with the credential's bearer; a sign-in's refused token is renewed once. */
+  private async send(method: string, path: string, body: unknown, idempotencyKey?: string): Promise<HttpAnswer> {
+    const bearer = await this.auth.bearer();
+    const answer = await this.once(bearer, method, path, body, idempotencyKey);
+    if (answer.status !== 401 || !this.auth.renew) return answer;
+    await this.auth.renew(bearer);
+    return this.once(await this.auth.bearer(), method, path, body, idempotencyKey);
+  }
+
   /**
    * One API call. A read is retried on no answer or a 5xx; a write only with an Idempotency-Key,
-   * and always with the same one, so a retry never spends twice.
+   * and always with the same one, so a retry never spends twice. A sign-in's token refused (401)
+   * is refreshed once and the call sent again: a 401 ran no handler, so nothing was spent.
    */
   async call(method: string, path: string, body?: unknown, idempotencyKey?: string): Promise<JsonObject> {
     const retries = method === 'GET' || idempotencyKey ? WRITE_RETRIES : 0;
     const delays = backoffDelays(2, 1.5, 15);
     for (let attempt = 0; ; attempt++) {
-      const answer = await this.once(method, path, body, idempotencyKey);
+      const answer = await this.send(method, path, body, idempotencyKey);
       if (answer.status >= 200 && answer.status < 300) return asObject(answerJson(answer));
       const payload = asObject(answerJson(answer));
       const code = typeof payload.code === 'string' ? payload.code : '';
@@ -120,19 +140,25 @@ export class Client {
         await this.sleep(wait);
         continue;
       }
-      throw refusal(answer, payload, code, this.cli);
+      throw refusal(answer, payload, code, this.cli, this.auth.kind);
     }
   }
 }
 
-function refusal(answer: HttpAnswer, payload: JsonObject, code: string, cli: string): SolaraError {
+function refusal(
+  answer: HttpAnswer,
+  payload: JsonObject,
+  code: string,
+  cli: string,
+  auth: Credential['kind'],
+): SolaraError {
   let detail = String(payload.detail || payload.title || `HTTP ${answer.status}`);
   // A 422 says only "validation failed"; which value was wrong is in `errors`.
   const problems = (Array.isArray(payload.errors) ? payload.errors : [])
     .filter((error): error is JsonObject => error !== null && typeof error === 'object')
     .map((error) => `${error.location ?? '?'}: ${error.message ?? ''}`);
   if (problems.length > 0) detail = `${detail} (${problems.join('; ')})`;
-  return new SolaraError(detail, nextStepFor(answer.status, code, cli), {
+  return new SolaraError(detail, nextStepFor(answer.status, code, cli, auth), {
     status: answer.status,
     code,
     body: payload,
