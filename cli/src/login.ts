@@ -1,6 +1,6 @@
-// `solara login`, `logout` and `status` (alone, or `whoami`): the CLI's own sign-in, so the person
+// `solaraai login`, `logout` and `status` (alone, or `whoami`): the CLI's own sign-in, so the person
 // never hands an agent a key. The tokens live only in the credentials file (credentials.ts) and
-// travel only to Solara; this file prints the workspace's name, the link and the code, never a
+// travel only to Solara AI; this file prints the workspace's name, the link and the code, never a
 // token.
 
 import { spawn } from 'node:child_process';
@@ -31,16 +31,16 @@ export interface AuthIo {
 /** The refusal when nothing signs the CLI in. */
 export function notSignedIn(cli: string): SolaraError {
   return new SolaraError(
-    'not signed in to Solara',
-    `${signInAgainStep(cli)} On a server or in CI, SOLARA_API_KEY can hold a key instead.`,
+    'not signed in to Solara AI',
+    `${signInAgainStep(cli)} On a server or in CI, SOLARAAI_API_KEY can hold a key instead.`,
     { exitCode: EXIT_USAGE },
   );
 }
 
 function noStore(): SolaraError {
   return new SolaraError(
-    'no home folder to keep the sign-in in (HOME, XDG_CONFIG_HOME and SOLARA_CONFIG_DIR are unset)',
-    'Set SOLARA_CONFIG_DIR to a folder only this user can read, then run login again.',
+    'no home folder to keep the sign-in in (HOME, XDG_CONFIG_HOME and SOLARAAI_CONFIG_DIR are unset)',
+    'Set SOLARAAI_CONFIG_DIR to a folder only this user can read, then run login again.',
     { exitCode: EXIT_USAGE },
   );
 }
@@ -78,7 +78,7 @@ async function identity(client: Client): Promise<JsonObject> {
 export async function loginCommand(io: AuthIo, browser: string): Promise<number> {
   if (!io.store) throw noStore();
   const store = io.store;
-  // A sign-in over an existing one ends the old first: no forgotten session stays live in Solara.
+  // A sign-in over an existing one ends the old first: no forgotten session stays live in Solara AI.
   if ((await signOut(io, store)) !== null) io.note('Signed out of the previous sign-in first.');
   const start = await startDevice(io.transport, io.apiUrl, io.userAgent);
   const minutes = Math.max(1, Math.round(start.expiresIn / 60));
@@ -110,12 +110,13 @@ export async function loginCommand(io: AuthIo, browser: string): Promise<number>
   const who = await identity(client);
   if (io.json) io.say(JSON.stringify({ ...who, auth: 'login', api_url: io.apiUrl }, null, 2));
   else io.say(`Signed in to ${String(who.workspace_name ?? 'your workspace')}`);
-  if (io.env.SOLARA_API_KEY?.trim()) io.note('This sign-in now wins over SOLARA_API_KEY (`logout` to use the key).');
+  if (io.env.SOLARAAI_API_KEY?.trim())
+    io.note('This sign-in now wins over SOLARAAI_API_KEY (`logout` to use the key).');
   return EXIT_OK;
 }
 
-/** Ends the stored sign-in in Solara (RFC 7009) and deletes it here: null when there was none,
- * else whether Solara answered. */
+/** Ends the stored sign-in in Solara AI (RFC 7009) and deletes it here: null when there was none,
+ * else whether Solara AI answered. */
 async function signOut(io: AuthIo, store: CredentialStore): Promise<boolean | null> {
   return store.locked(async () => {
     const signIn = await store.read(io.apiUrl);
@@ -126,16 +127,16 @@ async function signOut(io: AuthIo, store: CredentialStore): Promise<boolean | nu
   });
 }
 
-/** `logout`: ends the sign-in in Solara and deletes it here. */
+/** `logout`: ends the sign-in in Solara AI and deletes it here. */
 export async function logoutCommand(io: AuthIo): Promise<number> {
   const revoked = io.store ? await signOut(io, io.store) : null;
   if (revoked === null) io.say('Not signed in: nothing to sign out of.');
   else io.say(revoked ? 'Signed out.' : 'Signed out on this computer.');
   if (revoked === false) {
-    io.note('solara: Solara could not be reached to end the sign-in there.');
-    io.note('next: tell the person to disconnect "Solara CLI" in Solara, Settings -> Connected apps.');
+    io.note('solaraai: Solara AI could not be reached to end the sign-in there.');
+    io.note('next: tell the person to disconnect the CLI in Solara AI: Settings -> Connected apps.');
   }
-  if (io.env.SOLARA_API_KEY?.trim()) io.note('SOLARA_API_KEY is still set: the CLI uses it now.');
+  if (io.env.SOLARAAI_API_KEY?.trim()) io.note('SOLARAAI_API_KEY is still set: the CLI uses it now.');
   return EXIT_OK;
 }
 
@@ -151,8 +152,8 @@ export async function whoamiCommand(io: AuthIo, client: Client | null): Promise<
   io.say(`Workspace: ${String(who.workspace_name ?? '')}`);
   io.say(
     auth === 'login'
-      ? `Signed in with: ${io.cli} login (Solara CLI)`
-      : `Signed in with: the API key in SOLARA_API_KEY ("${String(who.name ?? '')}")`,
+      ? `Signed in with: ${io.cli} login (Solara AI CLI)`
+      : `Signed in with: the API key in SOLARAAI_API_KEY ("${String(who.name ?? '')}")`,
   );
   return EXIT_OK;
 }

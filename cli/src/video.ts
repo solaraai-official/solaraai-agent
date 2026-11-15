@@ -83,7 +83,7 @@ export function waitDecision(project: JsonObject, until: WaitUntil): WaitDecisio
 
 export function failureStep(project: JsonObject, cli: string): string {
   if (project.failure_reason === 'no_speech') return 'Nobody could be heard talking. Try a different clip.';
-  return `Try again later with \`${cli} start\`, or tell the person to contact Solara support.`;
+  return `Try again later with \`${cli} start\`, or tell the person to contact Solara AI support.`;
 }
 
 /** An export of rev is already under way or done: never send it again. */
@@ -96,7 +96,7 @@ export function currentRev(project: JsonObject): number {
   return int(project.rev);
 }
 
-/** The Solara app's origin: SOLARA_APP_URL, else the API's host with its `api` swapped for `app`
+/** The Solara AI app's origin: SOLARAAI_APP_URL, else the API's host with its `api` swapped for `app`
  * (api.solaraai.com is app.solaraai.com; eu-api.… is eu-app.…). */
 export function appUrl(apiUrl: string, override?: string): string {
   if (override) return override.replace(/\/+$/, '');

@@ -6,10 +6,10 @@ Please report security problems privately, never in a public issue, pull request
 
 - **GitHub:** this repository's **Security** tab → **Report a vulnerability**
   ([direct link](https://github.com/solaraai-official/solaraai-agent/security/advisories/new)).
-  Only Solara's maintainers see the report.
+  Only Solara AI's maintainers see the report.
 - **Email:** [contact@solaraai.com](mailto:contact@solaraai.com), with "Security" in the subject.
 
-Tell us what is affected (the `solaraai` CLI and its version, the skill, the plugin, or Solara's
+Tell us what is affected (the `solaraai` CLI and its version, the skill, the plugin, or Solara AI's
 service itself), how to reproduce it, and what an attacker could do with it. We confirm that we got
 your report, keep you updated while we fix it, and credit you in the advisory if you want.
 
@@ -17,17 +17,17 @@ your report, keep you updated while we fix it, and credit you in the advisory if
 
 - The `solaraai` npm package (the CLI in `cli/`): the latest release.
 - The `solara-video` skill and the Claude Code plugin and marketplace manifests on `main`.
-- Solara's API and app, when you reached them through any of the above.
+- Solara AI's API and app, when you reached them through any of the above.
 
 ## A leaked API key
 
-If a Solara API key was exposed (pasted in a chat, committed, logged), delete it in Solara under
+If a Solara AI API key was exposed (pasted in a chat, committed, logged), delete it in Solara AI under
 **Settings → API keys** and create a new one. That stops the old key at once. The CLI never prints,
 logs or stores the key: if you saw it do so, that is a vulnerability, so please report it.
 
 A sign-in from `solaraai login` is stored only in `~/.config/solaraai/credentials.json`, readable by
-your user alone. If that file was exposed, run `solaraai logout`, or disconnect **Solara CLI** in
-Solara under **Settings → Connected apps**: either ends the sign-in. The CLI never prints or logs
+your user alone. If that file was exposed, run `solaraai logout`, or disconnect the CLI in Solara AI
+under **Settings → Connected apps**: either ends the sign-in. The CLI never prints or logs
 it either.
 
 ## How releases are protected

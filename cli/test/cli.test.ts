@@ -19,28 +19,28 @@ afterEach(() => api.close());
 
 describe('help', () => {
   test('`--help` names every command and needs no key', async () => {
-    const result = await cli(['--help'], { env: { SOLARA_API_KEY: '' } });
+    const result = await cli(['--help'], { env: { SOLARAAI_API_KEY: '' } });
     expect(result.code).toBe(EXIT_OK);
     for (const command of COMMANDS) expect(result.stdout).toContain(`\n  ${command.name} `);
     expect(result.stdout).toContain('Exit codes: 0 done, 1 refused');
   });
 
   test("a command's --help shows its usage, every option it takes, and an example", async () => {
-    const result = await cli(['start', '--help'], { env: { SOLARA_API_KEY: '' } });
+    const result = await cli(['start', '--help'], { env: { SOLARAAI_API_KEY: '' } });
     expect(result.code).toBe(EXIT_OK);
-    expect(result.stdout).toContain('Usage: solara start --upload <upload_id> [options] [--json]');
+    expect(result.stdout).toContain('Usage: solaraai start --upload <upload_id> [options] [--json]');
     for (const option of COMMANDS.find((command) => command.name === 'start')?.options ?? []) {
       expect(result.stdout).toContain(`--${option.name} `);
     }
     expect(result.stdout).toContain('Example:');
-    expect((await cli(['help', 'wait'])).stdout).toContain('Usage: solara wait <video_id>');
+    expect((await cli(['help', 'wait'])).stdout).toContain('Usage: solaraai wait <video_id>');
   });
 
   test('a wrong command or argument says how to find the right one', async () => {
     for (const argv of [['render'], ['wait'], ['styles', '--colour'], ['wait', 'v1', '--until', 'done']]) {
       const result = await cli(argv, { apiUrl: api.url });
       expect(result.code).toBe(EXIT_USAGE);
-      expect(result.stderr).toMatch(/next: Run `solara (\w+ )?--help`/);
+      expect(result.stderr).toMatch(/next: Run `solaraai (\w+ )?--help`/);
     }
     expect(api.calls).toEqual([]);
   });
@@ -48,12 +48,24 @@ describe('help', () => {
 
 describe('signing in', () => {
   test('with no sign-in and no key, a command asks for the person to sign in, never for a key', async () => {
-    const result = await cli(['styles'], { apiUrl: api.url, env: { SOLARA_API_KEY: '' } });
+    const result = await cli(['styles'], { apiUrl: api.url, env: { SOLARAAI_API_KEY: '' } });
     expect(result.code).toBe(EXIT_USAGE);
-    expect(result.stderr).toContain('solara: not signed in to Solara');
-    expect(result.stderr).toContain('next: Run `solara login` yourself, give the person the link and the code');
+    expect(result.stderr).toContain('solaraai: not signed in to Solara AI');
+    expect(result.stderr).toContain('next: Run `solaraai login` yourself, give the person the link and the code');
     expect(result.stderr).not.toMatch(/paste|give it to you/i);
     expect(api.calls).toEqual([]);
+  });
+
+  // Before 0.4.0 the settings were SOLARA_*: a CI job set up then must keep working.
+  test('the settings’ old names still work, and the new ones win', async () => {
+    api.on('GET', '/api/v1/styles', { status: 200, json: { styles: [], caption_styles: [] } });
+    const old = await cli(['styles'], { env: { SOLARAAI_API_KEY: '', SOLARA_API_KEY: KEY, SOLARA_API_URL: api.url } });
+    expect(old.code, old.stderr).toBe(EXIT_OK);
+    expect(api.calls[0]?.headers.authorization).toBe(`Bearer ${KEY}`);
+
+    const both = await cli(['styles'], { apiUrl: api.url, env: { SOLARA_API_URL: 'http://old.invalid' } });
+    expect(both.code, both.stderr).toBe(EXIT_OK);
+    expect(api.calls).toHaveLength(2);
   });
 });
 
@@ -88,7 +100,7 @@ describe('proxies', () => {
 
 describe('the shipped file, on Node', () => {
   const root = join(import.meta.dir, '..');
-  const bin = join(root, 'dist', 'solara.js');
+  const bin = join(root, 'dist', 'cli.js');
 
   beforeAll(() => {
     const built = spawnSync('bun', ['build.ts'], { cwd: root, encoding: 'utf8' });
@@ -98,9 +110,10 @@ describe('the shipped file, on Node', () => {
   test('runs with nothing installed, and talks to the API', async () => {
     const version = spawnSync('node', [bin, '--version'], { encoding: 'utf8' });
     expect(version.stdout.trim()).toMatch(/^solaraai \d+\.\d+\.\d+$/);
+    expect(version.stderr).toBe('');
 
     api.on('GET', '/api/v1/styles', { status: 200, json: { styles: [{ id: 'brass', name: 'Brass' }] } });
-    const env = { PATH: process.env.PATH, SOLARA_API_KEY: KEY, SOLARA_API_URL: api.url };
+    const env = { PATH: process.env.PATH, SOLARAAI_API_KEY: KEY, SOLARAAI_API_URL: api.url };
     const styles = await new Promise<{ status: number | null; stdout: string }>((resolve) => {
       const child = Bun.spawn(['node', bin, 'styles', '--json'], { env, stdout: 'pipe' });
       void new Response(child.stdout).text().then(async (stdout) => resolve({ status: await child.exited, stdout }));
@@ -108,5 +121,15 @@ describe('the shipped file, on Node', () => {
     expect(styles.status).toBe(EXIT_OK);
     expect(JSON.parse(styles.stdout).styles[0].id).toBe('brass');
     expect(api.calls[0]?.headers['user-agent']).toMatch(/^solaraai-cli\/\d+\.\d+\.\d+ \(node /);
+  });
+
+  // `solara` was the installed command's name before 0.4.0: scripts that call it keep working.
+  test('`solara`, the old name, runs the same CLI and says once on stderr that it is now `solaraai`', () => {
+    const old = spawnSync('node', [join(root, 'dist', 'solara.js'), 'help', 'wait'], { encoding: 'utf8' });
+    expect(old.status).toBe(EXIT_OK);
+    expect(old.stdout).toContain('Usage: solaraai wait <video_id>');
+    expect(old.stderr).toBe(
+      'solaraai: `solara` is the old name of this command: run `solaraai` instead (same commands).\n',
+    );
   });
 });

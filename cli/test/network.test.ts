@@ -162,7 +162,7 @@ test('an upload to a store that stalls ends with a next step', async () => {
     const file = clip(tempDir(), 'talk.mp4', 15_840, 8 * 1024 * 1024);
     const apiUrl = `http://127.0.0.1:${(api.address() as AddressInfo).port}`;
     const start = performance.now();
-    const result = await onNode(['cli', 'upload', file], { SOLARA_API_KEY: KEY, SOLARA_API_URL: apiUrl });
+    const result = await onNode(['cli', 'upload', file], { SOLARAAI_API_KEY: KEY, SOLARAAI_API_URL: apiUrl });
     const took = performance.now() - start;
     expect(result.code).toBe(EXIT_REFUSED);
     expect(result.stderr.match(/retrying in/g)).toHaveLength(WRITE_RETRIES);

@@ -1,4 +1,4 @@
-// Where `solara login` keeps its sign-in: one JSON file only this user may read
+// Where `solaraai login` keeps its sign-in: one JSON file only this user may read
 // (~/.config/solaraai/credentials.json, mode 600, its folder 700), one entry per API address. The
 // tokens in it are never printed, logged or sent anywhere but the API's own token endpoint.
 //
@@ -40,7 +40,7 @@ interface CredentialsFile {
 /** The folder the CLI keeps its sign-in in, from the environment only (never a guess): null when
  * none is set, and then nothing is stored. */
 export function configDir(env: NodeJS.ProcessEnv): string | null {
-  if (env.SOLARA_CONFIG_DIR) return env.SOLARA_CONFIG_DIR;
+  if (env.SOLARAAI_CONFIG_DIR) return env.SOLARAAI_CONFIG_DIR;
   if (env.XDG_CONFIG_HOME) return join(env.XDG_CONFIG_HOME, 'solaraai');
   if (env.HOME) return join(env.HOME, '.config', 'solaraai');
   if (env.APPDATA) return join(env.APPDATA, 'solaraai');
@@ -121,7 +121,7 @@ export class CredentialStore {
           await rm(lock, { force: true }); // a command that died holding it
           continue;
         }
-        if (Date.now() > deadline) throw new Error(`another solara command holds ${lock}`);
+        if (Date.now() > deadline) throw new Error(`another solaraai command holds ${lock}`);
         await new Promise((done) => setTimeout(done, 100));
       }
     }

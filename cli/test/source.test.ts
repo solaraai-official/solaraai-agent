@@ -39,11 +39,11 @@ test('a clip whose length cannot be read asks for it, and sends nothing', async 
   expect(api.calls).toEqual([]);
 });
 
-test('only the video files Solara takes are uploaded', async () => {
+test('only the video files Solara AI takes are uploaded', async () => {
   const avi = clip(dir, 'talk.avi', 1000, 64);
   const result = await cli(['upload', avi], { apiUrl: api.url });
   expect(result.code).toBe(EXIT_USAGE);
-  expect(result.stderr).toContain('Solara takes .mp4, .mov and .webm files');
+  expect(result.stderr).toContain('Solara AI takes .mp4, .mov and .webm files');
   expect((await cli(['upload', `${dir}/missing.mp4`], { apiUrl: api.url })).stderr).toContain('no such file');
   expect(api.calls).toEqual([]);
 });

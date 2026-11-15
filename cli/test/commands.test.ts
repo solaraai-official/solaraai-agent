@@ -152,7 +152,7 @@ describe('start', () => {
     });
     const result = await cli(['start', '--upload', 'u1', '--duration-ms', '9000'], { apiUrl: api.url });
     expect(result.code).toBe(EXIT_REFUSED);
-    expect(result.stderr).toContain('solara: this API key has started its 30 videos (api_key_daily_limit)');
+    expect(result.stderr).toContain('solaraai: this API key has started its 30 videos (api_key_daily_limit)');
     expect(result.stderr).toContain('retry after: 3600 seconds');
     expect(result.stderr).toContain('midnight UTC');
     expect(api.to('POST', '/api/v1/projects')).toHaveLength(1);
@@ -182,7 +182,7 @@ describe('export', () => {
     expect(exports).toHaveLength(WRITE_RETRIES + 1);
     expect(new Set(exports.map((call) => call.headers['idempotency-key'])).size).toBe(1);
     expect(json(exports[0]?.body ?? Buffer.from('{}'))).toEqual({ rev: 3 });
-    expect(result.stdout).toContain('Next: solara wait v1 --until export');
+    expect(result.stdout).toContain('Next: solaraai wait v1 --until export');
   });
 
   test('an exported rev is not exported again', async () => {
@@ -222,7 +222,7 @@ describe('download', () => {
     });
     const result = await cli(['download', 'v1'], { apiUrl: api.url });
     expect(result.code).toBe(EXIT_REFUSED);
-    expect(result.stderr).toContain(`next: ${nextSteps('solara').not_exported}`);
+    expect(result.stderr).toContain(`next: ${nextSteps('solaraai').not_exported}`);
   });
 
   test('of an unknown video still says check the id', async () => {
@@ -249,6 +249,6 @@ test('a 422 names the value that was wrong', async () => {
   });
   const result = await cli(['status', 'nope', '--json'], { apiUrl: api.url });
   expect(result.code).toBe(EXIT_REFUSED);
-  expect(result.stderr).toContain('solara: validation failed (path.id: invalid value: invalid uuid)');
+  expect(result.stderr).toContain('solaraai: validation failed (path.id: invalid value: invalid uuid)');
   expect(JSON.parse(result.stdout).detail).toBe('validation failed');
 });

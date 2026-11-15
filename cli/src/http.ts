@@ -167,7 +167,7 @@ function parseHttpUrl(raw: string): URL {
     url = null;
   }
   if (!url || (url.protocol !== 'http:' && url.protocol !== 'https:')) {
-    throw new SolaraError(`refusing a non-HTTP URL: ${raw}`, 'Check SOLARA_API_URL.', { exitCode: EXIT_USAGE });
+    throw new SolaraError(`refusing a non-HTTP URL: ${raw}`, 'Check SOLARAAI_API_URL.', { exitCode: EXIT_USAGE });
   }
   return url;
 }

@@ -1,4 +1,4 @@
-// The Solara API with a sign-in or an API key: one call, its retries, and a refusal turned into a
+// The Solara AI API with a sign-in or an API key: one call, its retries, and a refusal turned into a
 // next step.
 
 import { type JsonObject, nextStepFor, SolaraError } from './errors';
@@ -20,7 +20,7 @@ export interface ClientOptions {
   sleep: Sleep;
   log: (line: string) => void;
   userAgent: string;
-  /** How this run was started (`solara`, or `npx -y solaraai`), for the next steps it prints. */
+  /** How this run was started (`solaraai`, or `npx -y solaraai`), for the next steps it prints. */
   cli: string;
 }
 
@@ -103,7 +103,7 @@ export class Client {
       return await this.transport({ method, url, headers, body: data });
     } catch (error) {
       if (!(error instanceof NoAnswerError)) throw error;
-      const detail = JSON.stringify({ detail: `no answer from Solara (${error.message})` });
+      const detail = JSON.stringify({ detail: `no answer from Solara AI (${error.message})` });
       return { status: 0, headers: {}, body: Buffer.from(detail), savedBytes: 0 };
     }
   }
@@ -135,7 +135,7 @@ export class Client {
       if (attempt < retries && isRetryable(answer.status, code) && wait <= MAX_RETRY_WAIT_SECONDS) {
         const got = answer.status || payload.detail || 'no answer';
         this.log(
-          `solara: ${method} ${path} got ${got}; retrying in ${wait.toFixed(0)}s (${attempt + 2} of ${retries + 1})`,
+          `solaraai: ${method} ${path} got ${got}; retrying in ${wait.toFixed(0)}s (${attempt + 2} of ${retries + 1})`,
         );
         await this.sleep(wait);
         continue;

@@ -39,7 +39,7 @@ const API_KEY_CODES = [
 ];
 
 test('every refusal names a next step', () => {
-  const steps = nextSteps('solara');
+  const steps = nextSteps('solaraai');
   for (const code of API_KEY_CODES) expect(nextStepFor(400, code)).toBe(steps[code] ?? `missing ${code}`);
   expect(nextStepFor(402, 'plan_required')).toContain('subscribe yourself');
   expect(nextStepFor(404, 'something_new')).toBe('Not found. Check the id.');

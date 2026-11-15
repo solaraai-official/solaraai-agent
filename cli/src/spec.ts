@@ -1,5 +1,5 @@
 // Every command, its arguments and options, and the help an agent meeting the CLI cold reads.
-// `{cli}` in any text is how this run was started: `solara`, or `npx -y solaraai`.
+// `{cli}` in any text is how this run was started: `solaraai`, or `npx -y solaraai`.
 
 import { FETCH_TIMEOUT_SECONDS } from './fetch-upload';
 import { ASPECTS, DEFAULT_STYLE, INTENSITIES, PAUSE_MS_RANGE, SPEED_RANGE } from './video';
@@ -41,7 +41,7 @@ export interface CommandSpec {
 export const COMMANDS: CommandSpec[] = [
   {
     name: 'login',
-    summary: 'sign in to Solara: you run it, the person confirms its code in their browser, once',
+    summary: 'sign in to Solara AI: you run it, the person confirms its code in their browser, once',
     args: [],
     options: [
       {
@@ -55,21 +55,21 @@ export const COMMANDS: CommandSpec[] = [
     ],
     about: [
       'An agent runs it itself: it prints a link and a code (on stderr) and waits up to 10 minutes. Give the',
-      'person both: they open the link on any device, sign in to Solara, check the code and choose Allow.',
+      'person both: they open the link on any device, sign in to Solara AI, check the code and choose Allow.',
       'Works where no browser can reach this machine (a sandbox, SSH). Then it prints only "Signed in to',
       '<workspace>": tell the person that line. It asks only for what the commands use (read, edit,',
       'export; never posting), ends an older sign-in first, and keeps the new one in',
       '~/.config/solaraai/credentials.json (this user only), refreshed on its own and never printed. It',
-      'wins over SOLARA_API_KEY. Run it in the background or with a long timeout.',
+      'wins over SOLARAAI_API_KEY. Run it in the background or with a long timeout.',
     ],
     examples: ['{cli} login', '{cli} login --browser never'],
   },
   {
     name: 'logout',
-    summary: 'sign out: end the sign-in in Solara and delete it from this machine',
+    summary: 'sign out: end the sign-in in Solara AI and delete it from this machine',
     args: [],
     options: [],
-    about: ['SOLARA_API_KEY, if set, is not touched.'],
+    about: ['SOLARAAI_API_KEY, if set, is not touched.'],
     examples: ['{cli} logout'],
   },
   {
@@ -77,7 +77,7 @@ export const COMMANDS: CommandSpec[] = [
     summary: 'the same as `status` with no video: who the CLI is signed in as',
     args: [],
     options: [],
-    about: ['Checks the sign-in (or SOLARA_API_KEY) with one read. Exit 0: it works; 2: not signed in.'],
+    about: ['Checks the sign-in (or SOLARAAI_API_KEY) with one read. Exit 0: it works; 2: not signed in.'],
     examples: ['{cli} whoami'],
   },
   {
@@ -104,7 +104,7 @@ export const COMMANDS: CommandSpec[] = [
   },
   {
     name: 'upload-url',
-    summary: 'have Solara fetch a recording from a public link (Google Drive, Dropbox, a website)',
+    summary: 'have Solara AI fetch a recording from a public link (Google Drive, Dropbox, a website)',
     args: [{ name: 'link', help: 'the public link to the video file the person gave' }],
     options: [
       {
@@ -122,7 +122,7 @@ export const COMMANDS: CommandSpec[] = [
       },
     ],
     about: [
-      'For a recording the person gives as a link, not a file: Solara downloads it itself (.mp4, .mov or',
+      'For a recording the person gives as a link, not a file: Solara AI downloads it itself (.mp4, .mov or',
       ".webm, up to 2 GB and 10 minutes). Prints the upload_id and, when the file says it, the clip's length",
       "(duration_ms): `start` needs both. A link that isn't public is refused with what to ask the person.",
       'Exit 3 when the timeout comes first: run it again with the --idempotency-key it printed (nothing is',
@@ -290,7 +290,7 @@ export const COMMANDS: CommandSpec[] = [
     about: [
       'Every post in the window, in publish order: its status (scheduled, publishing, published, failed,',
       '...), its time in UTC, its platforms and how each platform went. Read-only: the CLI cannot post,',
-      'move or retry a post; the person does that in the Solara calendar.',
+      'move or retry a post; the person does that in the Solara AI calendar.',
     ],
     examples: ['{cli} calendar', '{cli} calendar --from 2026-11-09 --to 2026-11-16'],
   },
@@ -307,9 +307,9 @@ function fill(text: string, cli: string): string {
 export function mainHelp(cli: string, version: string): string {
   const width = Math.max(...COMMANDS.map((command) => command.name.length));
   const lines = [
-    `solara ${version}: make edited short videos with Solara AI, from a terminal or an AI agent.`,
+    `solaraai ${version}: make edited short videos with Solara AI, from a terminal or an AI agent.`,
     '',
-    'Solara edits a talking-head recording into a short video: cuts, captions, zooms, b-roll and',
+    'Solara AI edits a talking-head recording into a short video: cuts, captions, zooms, b-roll and',
     'music in a chosen style. Upload the clip, start an edit, show the person the edit link, and',
     'export it only when they say yes.',
     '',
@@ -317,10 +317,10 @@ export function mainHelp(cli: string, version: string): string {
     '       npx -y solaraai <command> ...   (nothing to install; Node 20+)',
     '',
     `Setup: run \`${cli} status\`; if it is not signed in, run \`${cli} login\` yourself and give the person`,
-    '       the link and the code it prints. On a server or in CI, SOLARA_API_KEY can hold a key instead.',
+    '       the link and the code it prints. On a server or in CI, SOLARAAI_API_KEY can hold a key instead.',
     '',
     'The happy path:',
-    `  ${cli} login                        once: the person confirms a code in Solara`,
+    `  ${cli} login                        once: the person confirms a code in Solara AI`,
     `  ${cli} styles                       pick a style id`,
     `  ${cli} upload talk.mp4              prints upload_id and duration_ms`,
     `  ${cli} start --upload <upload_id> --duration-ms <ms> --style <id> \\`,
@@ -341,12 +341,13 @@ export function mainHelp(cli: string, version: string): string {
     '',
     'Rules: show the edit and get a yes before exporting; export once per approved edit, never in a',
     'loop; never post, publish or touch billing; never print, ask for or paste a key or a token.',
-    'To post a video, photos or a text post, the person does it in Solara, or connects an AI agent',
-    "through Solara's MCP server and approves each post: https://docs.solaraai.com/agents/connect",
+    'To post a video, photos or a text post, the person does it in Solara AI, or connects an AI agent',
+    "through Solara AI's MCP server and approves each post: https://docs.solaraai.com/agents/connect",
     '',
-    'Environment: SOLARA_API_KEY (used when there is no sign-in), SOLARA_API_URL (default',
-    'https://api.solaraai.com), SOLARA_APP_URL (the app, for edit links), SOLARA_CONFIG_DIR (where the',
-    'sign-in is kept; default ~/.config/solaraai), HTTPS_PROXY / NO_PROXY.',
+    'Environment: SOLARAAI_API_KEY (used when there is no sign-in), SOLARAAI_API_URL (default',
+    'https://api.solaraai.com), SOLARAAI_APP_URL (the app, for edit links), SOLARAAI_CONFIG_DIR (where the',
+    'sign-in is kept; default ~/.config/solaraai), HTTPS_PROXY / NO_PROXY. Their old names (SOLARA_API_KEY',
+    'and the like) still work.',
     'Docs: https://docs.solaraai.com/agents/skill-and-cli',
   ];
   return lines.join('\n');

@@ -1,8 +1,8 @@
-// The Solara CLI's sign-in (`solara login`): the OAuth 2.0 device flow (RFC 8628) against
-// Solara's own authorization server, as the client `solara-cli`. It works where no browser can
+// The Solara AI CLI's sign-in (`solaraai login`): the OAuth 2.0 device flow (RFC 8628) against
+// Solara AI's own authorization server, as the client `solara-cli`. It works where no browser can
 // reach this machine (an agent's sandbox, a server over SSH): the person opens a link on any
-// device, signed in to Solara, checks the code and chooses Allow. The tokens go only to the
-// credentials file and to Solara's token endpoint; nothing here prints or logs one.
+// device, signed in to Solara AI, checks the code and chooses Allow. The tokens go only to the
+// credentials file and to Solara AI's token endpoint; nothing here prints or logs one.
 
 import type { CredentialStore, SignIn } from './credentials';
 import { EXIT_REFUSED, EXIT_USAGE, NETWORK_STEP, SERVER_STEP, SolaraError } from './errors';
@@ -24,7 +24,7 @@ const REFRESH_MARGIN_MS = 60_000;
 
 /** What to tell the agent when there is no sign-in: it signs in itself, the person allows it. */
 export function signInAgainStep(cli: string): string {
-  return `Run \`${cli} login\` yourself, give the person the link and the code it prints, and wait while they choose Allow in Solara. Never ask them for a key or a token.`;
+  return `Run \`${cli} login\` yourself, give the person the link and the code it prints, and wait while they choose Allow in Solara AI. Never ask them for a key or a token.`;
 }
 
 export interface OAuthAnswer {
@@ -53,7 +53,7 @@ export async function postForm(
     });
   } catch (error) {
     if (!(error instanceof NoAnswerError)) throw error;
-    throw new SolaraError(`no answer from Solara (${error.message})`, NETWORK_STEP);
+    throw new SolaraError(`no answer from Solara AI (${error.message})`, NETWORK_STEP);
   }
   let body: Record<string, unknown> = {};
   try {
@@ -86,7 +86,7 @@ export async function startDevice(transport: Transport, apiUrl: string, userAgen
   );
   const text = (key: string) => (typeof body[key] === 'string' ? (body[key] as string) : '');
   if (status !== 200 || !text('device_code') || !text('user_code') || !text('verification_uri')) {
-    throw oauthRefusal(status, body, 'Solara would not start a sign-in');
+    throw oauthRefusal(status, body, 'Solara AI would not start a sign-in');
   }
   return {
     deviceCode: text('device_code'),
@@ -104,7 +104,7 @@ function oauthRefusal(status: number, body: Record<string, unknown>, what: strin
   if (status >= 500 || status === 0) return new SolaraError(`${what} (HTTP ${status})`, SERVER_STEP, { status });
   return new SolaraError(
     `${what}${detail}`,
-    'Run the same command again; if it fails the same way, tell Solara support.',
+    'Run the same command again; if it fails the same way, tell Solara AI support.',
     {
       status,
       code,
@@ -139,7 +139,7 @@ function pollAnswer(answer: OAuthAnswer, now: number): SignIn | 'pending' | 'slo
   if (answer.status === 200) {
     const signIn = signInFrom(answer.body, now);
     if (signIn) return signIn;
-    throw new SolaraError('Solara answered the sign-in without tokens', SERVER_STEP);
+    throw new SolaraError('Solara AI answered the sign-in without tokens', SERVER_STEP);
   }
   switch (answer.body.error) {
     case 'authorization_pending':
@@ -148,7 +148,7 @@ function pollAnswer(answer: OAuthAnswer, now: number): SignIn | 'pending' | 'slo
       return 'slow_down';
     case 'access_denied':
       throw new SolaraError(
-        'the sign-in was refused in Solara (Don’t allow)',
+        'the sign-in was refused in Solara AI (Don’t allow)',
         'Tell the person; run login again only if they ask.',
         { exitCode: EXIT_REFUSED, code: 'access_denied' },
       );
@@ -193,7 +193,7 @@ function expired(): SolaraError {
   );
 }
 
-/** Revokes a sign-in's session (RFC 7009); true when Solara answered. */
+/** Revokes a sign-in's session (RFC 7009); true when Solara AI answered. */
 export async function revoke(transport: Transport, apiUrl: string, token: string, userAgent: string): Promise<boolean> {
   try {
     const { status } = await postForm(transport, apiUrl + REVOKE_PATH, { token, client_id: CLIENT_ID }, userAgent);
@@ -267,7 +267,7 @@ async function refreshStored(stored: SignIn, options: LoginOptions): Promise<Sig
   );
   if (status === 200) {
     const next = signInFrom(body, options.now(), stored);
-    if (!next) throw new SolaraError('Solara answered the refresh without tokens', SERVER_STEP);
+    if (!next) throw new SolaraError('Solara AI answered the refresh without tokens', SERVER_STEP);
     await options.store.write(options.apiUrl, next);
     return next;
   }
@@ -275,12 +275,16 @@ async function refreshStored(stored: SignIn, options: LoginOptions): Promise<Sig
     await options.store.write(options.apiUrl, null);
     throw ended(options.cli);
   }
-  throw oauthRefusal(status, body, 'Solara would not refresh the sign-in');
+  throw oauthRefusal(status, body, 'Solara AI would not refresh the sign-in');
 }
 
 export function ended(cli: string): SolaraError {
-  return new SolaraError('the sign-in ended (disconnected in Solara, or unused for too long)', signInAgainStep(cli), {
-    exitCode: EXIT_USAGE,
-    code: 'sign_in_ended',
-  });
+  return new SolaraError(
+    'the sign-in ended (disconnected in Solara AI, or unused for too long)',
+    signInAgainStep(cli),
+    {
+      exitCode: EXIT_USAGE,
+      code: 'sign_in_ended',
+    },
+  );
 }

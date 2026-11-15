@@ -44,19 +44,19 @@ export type AuthKind = 'login' | 'key';
 
 /** The refusals that read differently for a sign-in than for an API key. */
 function credentialSteps(cli: string, auth: AuthKind): Record<string, string> {
-  const login = `Run \`${cli} login\` yourself, give the person the link and the code it prints, and wait while they choose Allow in Solara. Never ask them for a key or a token.`;
+  const login = `Run \`${cli} login\` yourself, give the person the link and the code it prints, and wait while they choose Allow in Solara AI. Never ask them for a key or a token.`;
   if (auth === 'login') {
     return {
       api_key_invalid: `The sign-in ended. ${login}`,
-      api_key_revoked: `The sign-in was disconnected in Solara. ${login}`,
-      api_key_not_allowed: "The CLI can't do this. Ask the person to do it in the Solara app.",
+      api_key_revoked: `The sign-in was disconnected in Solara AI. ${login}`,
+      api_key_not_allowed: "The CLI can't do this. Ask the person to do it in the Solara AI app.",
       insufficient_scope: `The sign-in lacks this permission. ${login}`,
     };
   }
   return {
-    api_key_invalid: `SOLARA_API_KEY was refused. ${login} On a server, the person sets a working key where you run.`,
+    api_key_invalid: `SOLARAAI_API_KEY was refused. ${login} On a server, the person sets a working key where you run.`,
     api_key_revoked: `This key was revoked. ${login} On a server, the person sets a new key where you run.`,
-    api_key_not_allowed: "API keys can't do this. Ask the person to do it in the Solara app.",
+    api_key_not_allowed: "API keys can't do this. Ask the person to do it in the Solara AI app.",
     insufficient_scope: `This key lacks the permission. ${login}`,
   };
 }
@@ -64,17 +64,17 @@ function credentialSteps(cli: string, auth: AuthKind): Record<string, string> {
 /**
  * What the agent should do next, by the API's error code. Every refusal the API can give a key or
  * a sign-in is here (services/backend/internal/transport); an unknown code falls back to the HTTP
- * status. `cli` is how this run was started (`solara`, or `npx -y solaraai`), so a next step can be
+ * status. `cli` is how this run was started (`solaraai`, or `npx -y solaraai`), so a next step can be
  * pasted; `auth` how it authenticated.
  */
 export function nextSteps(cli: string, auth: AuthKind = 'key'): Record<string, string> {
   return {
     ...credentialSteps(cli, auth),
-    agent_api_off: 'API access is off for this workspace. Tell the person to contact Solara support.',
+    agent_api_off: 'API access is off for this workspace. Tell the person to contact Solara AI support.',
     // A key follows the workspace's plan (owner, 2026-11-05): on the free plan it meets the free
     // plan's limits where the app shows them to the person.
     plan_required:
-      "The workspace's plan doesn't cover this: on the free plan, its one export is used, or this downloads or posts a video Solara edited. " +
+      "The workspace's plan doesn't cover this: on the free plan, its one export is used, or this downloads or posts a video Solara AI edited. " +
       'Tell the person: "You\'ve used your free export: upgrade to keep going" (app.solaraai.com/plans). Never subscribe yourself.',
     subscription_required:
       "The free plan's videos are used, or the recording is longer than the free plan takes. Tell the person: upgrade to keep going (app.solaraai.com/plans), or use a shorter clip. Never subscribe yourself.",
@@ -99,17 +99,17 @@ export function nextSteps(cli: string, auth: AuthKind = 'key'): Record<string, s
       "Pause length and speed aren't offered to this workspace. Tell the person and ask whether to start without them (drop --pause-ms and --speed).",
     landscape_off:
       "16:9 isn't offered to this workspace yet. Tell the person and ask whether to make it 9:16 instead (drop --aspect).",
-    // upload-url: a link Solara would not, or could not, fetch.
+    // upload-url: a link Solara AI would not, or could not, fetch.
     url_not_allowed:
-      'Solara refused the link (the detail says why). Ask the person for a public share link to the video file itself (Google Drive: Share -> Anyone with the link; Dropbox: Copy link).',
+      'Solara AI refused the link (the detail says why). Ask the person for a public share link to the video file itself (Google Drive: Share -> Anyone with the link; Dropbox: Copy link).',
     url_not_public: `The link isn't public. Ask the person to share it as Anyone with the link (Google Drive) or to copy a Dropbox link, then run \`${cli} upload-url\` again.`,
-    url_unreachable: `Solara couldn't download the file (the detail says why). Ask the person whether the link opens in a private window, or for the file itself: \`${cli} upload <file>\`.`,
+    url_unreachable: `Solara AI couldn't download the file (the detail says why). Ask the person whether the link opens in a private window, or for the file itself: \`${cli} upload <file>\`.`,
     not_a_video: "The link isn't an .mp4, .mov or .webm video. Ask the person for the link to the video file itself.",
     video_too_large:
-      'The file is over what Solara fetches (the detail says: 2 GB, less on the free plan). Ask the person for a smaller export or a shorter clip.',
+      'The file is over what Solara AI fetches (the detail says: 2 GB, less on the free plan). Ask the person for a smaller export or a shorter clip.',
     video_too_long: 'The video is over 10 minutes. Ask the person for a clip of 10 minutes or less.',
     url_fetches_busy:
-      'Solara is already fetching videos (the detail says whose). Wait a minute for one to finish, then run the same command again.',
+      'Solara AI is already fetching videos (the detail says whose). Wait a minute for one to finish, then run the same command again.',
     url_fetch_daily_limit: `The free plan fetches a few videos a day from links, and this workspace has today (UTC). Tell the person: they can upload the file (\`${cli} upload <file>\`), wait until after midnight UTC, or upgrade (app.solaraai.com/plans). Never subscribe yourself.`,
   };
 }
@@ -119,7 +119,7 @@ function statusSteps(cli: string, auth: AuthKind): Record<number, string> {
     400: "The request was malformed. Check the command's arguments.",
     401: credentialSteps(cli, auth).api_key_invalid ?? '',
     402: "The workspace's plan doesn't cover this. Tell the person they can upgrade at app.solaraai.com/plans; never subscribe yourself.",
-    403: "API keys can't do this. Ask the person to do it in the Solara app.",
+    403: "API keys can't do this. Ask the person to do it in the Solara AI app.",
     404: 'Not found. Check the id.',
     409: `The video isn't in a state that allows this. Run \`${cli} status <video_id>\`.`,
     413: 'The file is too big: at most 2 GB.',
@@ -128,12 +128,13 @@ function statusSteps(cli: string, auth: AuthKind): Record<number, string> {
   };
 }
 
-export const SERVER_STEP = 'Solara had a problem. Wait a minute and run the same command again (it is safe to repeat).';
+export const SERVER_STEP =
+  'Solara AI had a problem. Wait a minute and run the same command again (it is safe to repeat).';
 export const NETWORK_STEP =
   'No answer in time. Check the network, then run the same command again (it is safe to repeat).';
 
 /** The next step for a refusal: by its code, else by its status (0 is no answer at all). */
-export function nextStepFor(status: number, code: string, cli = 'solara', auth: AuthKind = 'key'): string {
+export function nextStepFor(status: number, code: string, cli = 'solaraai', auth: AuthKind = 'key'): string {
   const byCode = nextSteps(cli, auth)[code];
   if (byCode) return byCode;
   if (status === 0) return NETWORK_STEP;
