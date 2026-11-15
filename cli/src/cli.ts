@@ -39,9 +39,26 @@ export interface Io {
 }
 
 /** How this run was started, so every command it prints can be pasted: through npx (`npm exec`),
- * or the installed `solara`. */
+ * or the installed `solaraai` (also when run as `solara`, its old name: the next steps teach the new one). */
 export function invokedAs(env: NodeJS.ProcessEnv): string {
-  return env.npm_command === 'exec' ? 'npx -y solaraai' : 'solara';
+  return env.npm_command === 'exec' ? 'npx -y solaraai' : 'solaraai';
+}
+
+/** The settings the environment holds, read as SOLARAAI_<name>. */
+const SETTINGS = ['API_KEY', 'API_URL', 'APP_URL', 'CONFIG_DIR'] as const;
+
+/**
+ * The environment with each setting's old name (SOLARA_<name>, before 0.4.0) filling its new one
+ * when the new one is unset, so a CI job or a shell profile set up before the rename keeps working.
+ * Everything else reads only the new names.
+ */
+export function withOldSettingNames(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  const merged = { ...env };
+  for (const name of SETTINGS) {
+    const old = env[`SOLARA_${name}`];
+    if (!merged[`SOLARAAI_${name}`] && old) merged[`SOLARAAI_${name}`] = old;
+  }
+  return merged;
 }
 
 type Values = Record<string, string | number | undefined>;
@@ -170,7 +187,7 @@ async function runCommand(spec: CommandSpec, ctx: Context, parsed: Parsed): Prom
 
 function printRefusal(refused: SolaraError, json: boolean, io: Io): void {
   const label = refused.code ? ` (${refused.code})` : '';
-  io.stderr(`solara: ${refused.message}${label}\n`);
+  io.stderr(`solaraai: ${refused.message}${label}\n`);
   if (refused.retryAfter) io.stderr(`retry after: ${refused.retryAfter.toFixed(0)} seconds\n`);
   if (refused.nextStep) io.stderr(`next: ${refused.nextStep}\n`);
   if (json && refused.body !== undefined) io.stdout(`${JSON.stringify(refused.body, null, 2)}\n`);
@@ -197,16 +214,16 @@ function answerWithoutCommand(argv: string[], cli: string, say: (line: string) =
 
 /** The API's address, refused unless it is http(s). */
 function apiUrlOf(io: Io): string {
-  const apiUrl = (io.env.SOLARA_API_URL || DEFAULT_API_URL).replace(/\/+$/, '');
+  const apiUrl = (io.env.SOLARAAI_API_URL || DEFAULT_API_URL).replace(/\/+$/, '');
   if (!/^https?:\/\/[^/]/.test(apiUrl)) {
-    throw new SolaraError(`SOLARA_API_URL isn't an http(s) URL: ${apiUrl}`, 'Fix or unset SOLARA_API_URL.', {
+    throw new SolaraError(`SOLARAAI_API_URL isn't an http(s) URL: ${apiUrl}`, 'Fix or unset SOLARAAI_API_URL.', {
       exitCode: EXIT_USAGE,
     });
   }
   return apiUrl;
 }
 
-/** Everything a command needs to reach Solara, and how it signs in. */
+/** Everything a command needs to reach Solara AI, and how it signs in. */
 interface Wiring {
   apiUrl: string;
   transport: Transport;
@@ -234,7 +251,7 @@ function wire(io: Io, cli: string): Wiring {
 }
 
 /**
- * How this run signs in: the stored sign-in for this API wins, then SOLARA_API_KEY (a Solara key);
+ * How this run signs in: the stored sign-in for this API wins, then SOLARAAI_API_KEY (a Solara AI key);
  * null when neither is there.
  */
 async function credentialFor(io: Io, w: Wiring, cli: string): Promise<Credential | null> {
@@ -249,12 +266,13 @@ async function credentialFor(io: Io, w: Wiring, cli: string): Promise<Credential
       now: Date.now,
     });
   }
-  const apiKey = io.env.SOLARA_API_KEY?.trim() ?? '';
+  const apiKey = io.env.SOLARAAI_API_KEY?.trim() ?? '';
   return apiKey.startsWith('sol_') ? keyCredential(apiKey) : null;
 }
 
 /** Runs one command line; returns its exit code. Never prints a key or a token. */
-export async function run(argv: string[], io: Io): Promise<number> {
+export async function run(argv: string[], given: Io): Promise<number> {
+  const io: Io = { ...given, env: withOldSettingNames(given.env) };
   const cli = invokedAs(io.env);
   const say = (line: string) => io.stdout(`${line}\n`);
   const answered = answerWithoutCommand(argv, cli, say);

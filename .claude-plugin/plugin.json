@@ -1,7 +1,7 @@
 {
   "name": "solaraai",
   "displayName": "Solara AI",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Turn a talking-head recording into an edited, captioned short video with Solara AI. Adds the Solara AI MCP server (you sign in) and the solara-video skill, which runs the Solara AI CLI (npx -y solaraai) with an API key.",
   "author": {
     "name": "Solara AI",

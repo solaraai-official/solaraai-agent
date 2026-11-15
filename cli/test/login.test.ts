@@ -1,5 +1,5 @@
-// `solara login`, `logout` and `status`: the device flow against a stand-in authorization server,
-// the sign-in kept to this user, refreshed on its own, winning over SOLARA_API_KEY, and never
+// `solaraai login`, `logout` and `status`: the device flow against a stand-in authorization server,
+// the sign-in kept to this user, refreshed on its own, winning over SOLARAAI_API_KEY, and never
 // printed.
 
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
@@ -70,7 +70,7 @@ describe('login', () => {
     );
     api.on('GET', '/api/v1/agent/identity', { status: 200, json: identity });
 
-    const result = await cli(['login'], { apiUrl: api.url, env: { SOLARA_API_KEY: '', SOLARA_CONFIG_DIR: dir } });
+    const result = await cli(['login'], { apiUrl: api.url, env: { SOLARAAI_API_KEY: '', SOLARAAI_CONFIG_DIR: dir } });
     expect(result.code, result.stderr).toBe(EXIT_OK);
     expect(result.stdout).toBe('Signed in to Bakery on Main\n');
     expect(result.stderr).toContain(page);
@@ -106,7 +106,7 @@ describe('login', () => {
       },
     });
     api.on('POST', '/oauth/token', { status: 400, json: { error: 'access_denied' } });
-    const env = { SOLARA_API_KEY: '', SOLARA_CONFIG_DIR: dir };
+    const env = { SOLARAAI_API_KEY: '', SOLARAAI_CONFIG_DIR: dir };
     const refused = await cli(['login', '--browser', 'never'], { apiUrl: api.url, env });
     expect(refused.code).toBe(EXIT_REFUSED);
     expect(refused.stderr).toContain('the sign-in was refused');
@@ -119,7 +119,7 @@ describe('login', () => {
     expect(await new CredentialStore(dir).read(api.url)).toBeNull();
   });
 
-  test('signing in again ends the old sign-in in Solara first', async () => {
+  test('signing in again ends the old sign-in in Solara AI first', async () => {
     await new CredentialStore(dir).write(api.url, signedIn(600_000));
     api.on('POST', '/oauth/revoke', { status: 200 });
     api.on('POST', '/oauth/device_authorization', {
@@ -135,7 +135,7 @@ describe('login', () => {
     api.on('GET', '/api/v1/agent/identity', { status: 200, json: identity });
     const result = await cli(['login', '--browser', 'never'], {
       apiUrl: api.url,
-      env: { SOLARA_API_KEY: '', SOLARA_CONFIG_DIR: dir },
+      env: { SOLARAAI_API_KEY: '', SOLARAAI_CONFIG_DIR: dir },
     });
     expect(result.code, result.stderr).toBe(EXIT_OK);
     const order = api.calls.map((call) => call.path);
@@ -153,7 +153,7 @@ describe('login', () => {
   });
 
   test('the sign-in is kept under the config folder the environment names, and nowhere without one', () => {
-    expect(configDir({ SOLARA_CONFIG_DIR: '/x' })).toBe('/x');
+    expect(configDir({ SOLARAAI_CONFIG_DIR: '/x' })).toBe('/x');
     expect(configDir({ XDG_CONFIG_HOME: '/c', HOME: '/h' })).toBe('/c/solaraai');
     expect(configDir({ HOME: '/h' })).toBe('/h/.config/solaraai');
     expect(configDir({})).toBeNull();
@@ -161,12 +161,12 @@ describe('login', () => {
 });
 
 describe('the stored sign-in', () => {
-  test('wins over SOLARA_API_KEY, and is refreshed before its token expires', async () => {
+  test('wins over SOLARAAI_API_KEY, and is refreshed before its token expires', async () => {
     await new CredentialStore(dir).write(api.url, signedIn(30_000)); // inside the minute's margin
     api.on('POST', '/oauth/token', tokens(NEXT_ACCESS, NEXT_REFRESH));
     api.on('GET', '/api/v1/styles', { status: 200, json: { styles: [], caption_styles: [] } });
 
-    const result = await cli(['styles'], { apiUrl: api.url, env: { SOLARA_API_KEY: KEY, SOLARA_CONFIG_DIR: dir } });
+    const result = await cli(['styles'], { apiUrl: api.url, env: { SOLARAAI_API_KEY: KEY, SOLARAAI_CONFIG_DIR: dir } });
     expect(result.code, result.stderr).toBe(EXIT_OK);
     expect(form(api.to('POST', '/oauth/token')[0]?.body ?? Buffer.alloc(0))).toEqual({
       grant_type: 'refresh_token',
@@ -187,20 +187,20 @@ describe('the stored sign-in', () => {
       { status: 200, json: { styles: [], caption_styles: [] } },
     );
     api.on('POST', '/oauth/token', tokens(NEXT_ACCESS, NEXT_REFRESH));
-    const result = await cli(['styles'], { apiUrl: api.url, env: { SOLARA_API_KEY: '', SOLARA_CONFIG_DIR: dir } });
+    const result = await cli(['styles'], { apiUrl: api.url, env: { SOLARAAI_API_KEY: '', SOLARAAI_CONFIG_DIR: dir } });
     expect(result.code, result.stderr).toBe(EXIT_OK);
     const bearers = api.to('GET', '/api/v1/styles').map((call) => call.headers.authorization);
     expect(bearers).toEqual([`Bearer ${ACCESS}`, `Bearer ${NEXT_ACCESS}`]);
   });
 
-  test('a sign-in disconnected in Solara is forgotten, and the agent is told to have the person sign in', async () => {
+  test('a sign-in disconnected in Solara AI is forgotten, and the agent is told to have the person sign in', async () => {
     await new CredentialStore(dir).write(api.url, signedIn(600_000));
     api.on('GET', '/api/v1/styles', { status: 401, json: { code: 'api_key_invalid' } });
     api.on('POST', '/oauth/token', { status: 400, json: { error: 'invalid_grant' } });
-    const result = await cli(['styles'], { apiUrl: api.url, env: { SOLARA_API_KEY: '', SOLARA_CONFIG_DIR: dir } });
+    const result = await cli(['styles'], { apiUrl: api.url, env: { SOLARAAI_API_KEY: '', SOLARAAI_CONFIG_DIR: dir } });
     expect(result.code).toBe(EXIT_USAGE);
-    expect(result.stderr).toContain('solara: the sign-in ended');
-    expect(result.stderr).toContain('next: Run `solara login` yourself, give the person the link and the code');
+    expect(result.stderr).toContain('solaraai: the sign-in ended');
+    expect(result.stderr).toContain('next: Run `solaraai login` yourself, give the person the link and the code');
     expect(await new CredentialStore(dir).read(api.url)).toBeNull();
   });
 
@@ -212,7 +212,7 @@ describe('the stored sign-in', () => {
       json: { error: 'invalid_grant' },
     });
     api.on('GET', '/api/v1/styles', { status: 200, json: { styles: [], caption_styles: [] } });
-    const env = { SOLARA_API_KEY: '', SOLARA_CONFIG_DIR: dir };
+    const env = { SOLARAAI_API_KEY: '', SOLARAAI_CONFIG_DIR: dir };
     const both = await Promise.all([
       cli(['styles'], { apiUrl: api.url, env }),
       cli(['styles'], { apiUrl: api.url, env }),
@@ -223,7 +223,7 @@ describe('the stored sign-in', () => {
 
   test('a sign-in for one API is not used for another', async () => {
     await new CredentialStore(dir).write('https://api.solaraai.com', signedIn(600_000));
-    const result = await cli(['styles'], { apiUrl: api.url, env: { SOLARA_API_KEY: '', SOLARA_CONFIG_DIR: dir } });
+    const result = await cli(['styles'], { apiUrl: api.url, env: { SOLARAAI_API_KEY: '', SOLARAAI_CONFIG_DIR: dir } });
     expect(result.code).toBe(EXIT_USAGE);
     expect(api.calls).toEqual([]);
   });
@@ -247,37 +247,37 @@ describe('status and logout', () => {
     const withKey = await cli(['status'], { apiUrl: api.url });
     expect(withKey.code, withKey.stderr).toBe(EXIT_OK);
     expect(withKey.stdout).toBe(
-      'Workspace: Bakery on Main\nSigned in with: the API key in SOLARA_API_KEY ("Laptop")\n',
+      'Workspace: Bakery on Main\nSigned in with: the API key in SOLARAAI_API_KEY ("Laptop")\n',
     );
 
     await new CredentialStore(dir).write(api.url, signedIn(600_000));
     api.on('GET', '/api/v1/agent/identity', { status: 200, json: identity });
-    const signed = await cli(['whoami', '--json'], { apiUrl: api.url, env: { SOLARA_CONFIG_DIR: dir } });
+    const signed = await cli(['whoami', '--json'], { apiUrl: api.url, env: { SOLARAAI_CONFIG_DIR: dir } });
     expect(signed.code, signed.stderr).toBe(EXIT_OK);
     expect(JSON.parse(signed.stdout)).toMatchObject({ workspace_name: 'Bakery on Main', auth: 'login' });
     expect(api.to('GET', '/api/v1/agent/identity').at(-1)?.headers.authorization).toBe(`Bearer ${ACCESS}`);
 
-    const none = await cli(['status'], { apiUrl: api.url, env: { SOLARA_API_KEY: '' } });
+    const none = await cli(['status'], { apiUrl: api.url, env: { SOLARAAI_API_KEY: '' } });
     expect(none.code).toBe(EXIT_USAGE);
-    expect(none.stderr).toContain('next: Run `solara login` yourself, give the person the link and the code');
+    expect(none.stderr).toContain('next: Run `solaraai login` yourself, give the person the link and the code');
   });
 
-  test('logout ends the sign-in in Solara, deletes it here, and leaves SOLARA_API_KEY alone', async () => {
+  test('logout ends the sign-in in Solara AI, deletes it here, and leaves SOLARAAI_API_KEY alone', async () => {
     await new CredentialStore(dir).write(api.url, signedIn(600_000));
     api.on('POST', '/oauth/revoke', { status: 200 });
-    const result = await cli(['logout'], { apiUrl: api.url, env: { SOLARA_CONFIG_DIR: dir } });
+    const result = await cli(['logout'], { apiUrl: api.url, env: { SOLARAAI_CONFIG_DIR: dir } });
     expect(result.code).toBe(EXIT_OK);
     expect(result.stdout).toBe('Signed out.\n');
     expect(form(api.to('POST', '/oauth/revoke')[0]?.body ?? Buffer.alloc(0))).toEqual({
       token: REFRESH,
       client_id: 'solara-cli',
     });
-    expect(result.stderr).toContain('SOLARA_API_KEY is still set');
+    expect(result.stderr).toContain('SOLARAAI_API_KEY is still set');
     expect(await new CredentialStore(dir).read(api.url)).toBeNull();
 
     await new CredentialStore(dir).write(api.url, signedIn(600_000));
     api.on('POST', '/oauth/revoke', 'reset');
-    const offline = await cli(['logout'], { apiUrl: api.url, env: { SOLARA_CONFIG_DIR: dir } });
+    const offline = await cli(['logout'], { apiUrl: api.url, env: { SOLARAAI_CONFIG_DIR: dir } });
     expect(offline.code).toBe(EXIT_OK);
     expect(offline.stdout).toBe('Signed out on this computer.\n');
     expect(offline.stderr).toContain('Settings -> Connected apps');

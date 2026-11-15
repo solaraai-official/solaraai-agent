@@ -3,7 +3,7 @@
 This repository is private until launch day, then public. It holds the Solara AI skill and the
 plugin (for Claude Code, Cursor and Grok Bot), and it is where the npm package `solaraai` (the CLI
 in `cli/`) is published from, with provenance. The source of the CLI, the skill, the plugin
-files, `README.md`, `SECURITY.md` and this file is Solara's private monorepo
+files, `README.md`, `SECURITY.md` and this file is Solara AI's private monorepo
 (`packages/node/solara-cli`), copied here by `just solara-cli-sync-public <checkout>`: change them
 there, never here.
 
@@ -130,7 +130,7 @@ npm trust list solaraai
 ```bash
 grep '"version"' cli/package.json        # newer than 0.2.0, which npm already has (step 1)
 gh release create cli-v<version> --repo solaraai-official/solaraai-agent --target main \
-  --title "solaraai <version>" --notes "The Solara CLI: npx -y solaraai --help"
+  --title "solaraai <version>" --notes "The Solara AI CLI: npx -y solaraai --help"
 ```
 
 (Or **Releases → Draft a new release**, tag `cli-v<version>` on `main`, **Publish release**.)
@@ -172,12 +172,14 @@ Changes to `skills/solara-video/SKILL.md` also come from the monorepo (`just
 solara-cli-sync-public`), and so do the plugin and marketplace manifests: `.claude-plugin/`
 with `.mcp.json` for Claude Code, `.cursor-plugin/` with `mcp.json` for Cursor and Grok Bot. The
 Claude Code plugin is named `solaraai` (renamed from `solara` before launch, so installs are
-`/plugin install solaraai@solaraai`) and the Cursor plugin `solara`; both names are ids, never
-rename them again. Both are shown as **Solara AI**, and both connect
-the remote server `https://api.solaraai.com/mcp` (streamable HTTP, the person signs in with OAuth;
-nothing runs locally). Keep `version` the same in both `plugin.json` files: Cursor's validator
-fails when they differ. CI runs `claude plugin validate . --strict` on the Claude Code manifests and
-the skill.
+`/plugin install solaraai@solaraai`), and so is the Cursor plugin (renamed from `solara` on
+2026-11-15, before Cursor listed it); both names are ids, never rename them again. Both are shown
+as **Solara AI**, and both connect the remote server `https://api.solaraai.com/mcp` (streamable
+HTTP, the person signs in with OAuth; nothing runs locally) under the key `solaraai` (`solara`
+until 2026-11-15). Keep `version` the same in both `plugin.json` files: Cursor's validator fails
+when they differ, and an installed plugin picks up a changed skill or MCP file only once the
+number changes. CI runs `claude plugin validate . --strict` on the Claude Code manifests and the
+skill.
 
 The icon in `assets/` is the one the Solara AI MCP server itself shows
 (`https://app.solaraai.com/solara-connector-icon.svg` and `-512.png`): a black ring on a white
@@ -198,8 +200,8 @@ marketplace validates with, [`cursor/plugins/schemas`](https://github.com/cursor
   and `./mcp.json`.
 - `mcp.json` at the root: Cursor's MCP format (see [MCP](https://cursor.com/docs/context/mcp)). A
   server with a `url` is remote; Cursor signs in with OAuth (PKCE, dynamic client registration),
-  using the redirect addresses Cursor documents, which Solara's sign-in already accepts.
-- `.cursor-plugin/marketplace.json`: optional for one plugin; it lists `solara` at `./`, as the
+  using the redirect addresses Cursor documents, which Solara AI's sign-in already accepts.
+- `.cursor-plugin/marketplace.json`: optional for one plugin; it lists `solaraai` at `./`, as the
   Claude Code marketplace does. Plugin entries take `name`, `source`, `description` and
   `minClientVersions` only.
 
@@ -218,8 +220,8 @@ done
 ```
 
 Then test it in Cursor before submitting (Cursor's checklist asks for it): copy this folder to
-`~/.cursor/plugins/local/solara`, run **Developer: Reload Window**, and check in **Customize** that
-the `solara-video` skill and the `plugin-solara-solara` MCP server are there; sign in and make one
+`~/.cursor/plugins/local/solaraai`, run **Developer: Reload Window**, and check in **Customize** that
+the `solara-video` skill and the `plugin-solaraai-solaraai` MCP server are there; sign in and make one
 edit.
 
 **Launch day: submit it** (not before: both need the repository public, and Cursor lists only
@@ -233,7 +235,7 @@ open-source plugins it has reviewed):
    background plate (`https://app.solaraai.com/solara-connector-icon-512.png`), where to list it
    (tick Grok Bot and Cursor, and Grok), the MCP server URL or public GitHub repository (the
    repository, `https://github.com/solaraai-official/solaraai-agent`, so the skill is
-   included), a brief description, and testing instructions. Reviewers need a Solara account on a
+   included), a brief description, and testing instructions. Reviewers need a Solara AI account on a
    paid plan to test: give them one in the testing instructions, never in this repository.
 3. Or, for Cursor alone, submit the repository at
    [cursor.com/marketplace/publish](https://cursor.com/marketplace/publish); questions to

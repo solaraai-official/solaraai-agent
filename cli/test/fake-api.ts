@@ -1,4 +1,4 @@
-// A stand-in for the Solara API and its storage on 127.0.0.1: real HTTP, canned answers, every
+// A stand-in for the Solara AI API and its storage on 127.0.0.1: real HTTP, canned answers, every
 // request recorded. Never the live API.
 
 import { createServer, type IncomingMessage, type Server } from 'node:http';
@@ -92,7 +92,7 @@ export interface CliResult {
   opened: string[];
 }
 
-/** The CLI, in this process, as an agent runs it: the key in SOLARA_API_KEY, the API at `apiUrl`,
+/** The CLI, in this process, as an agent runs it: the key in SOLARAAI_API_KEY, the API at `apiUrl`,
  * no home folder (so no sign-in) unless the test gives one. Its sleeps and the links it would open
  * are recorded, not slept or opened. */
 export async function cli(
@@ -105,8 +105,8 @@ export async function cli(
   const opened: string[] = [];
   const env: NodeJS.ProcessEnv = {
     PATH: process.env.PATH,
-    SOLARA_API_KEY: KEY,
-    ...(options.apiUrl ? { SOLARA_API_URL: options.apiUrl } : {}),
+    SOLARAAI_API_KEY: KEY,
+    ...(options.apiUrl ? { SOLARAAI_API_URL: options.apiUrl } : {}),
     ...options.env,
   };
   const code = await run(argv, {

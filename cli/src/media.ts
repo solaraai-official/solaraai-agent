@@ -17,7 +17,7 @@ export function contentTypeFor(path: string): string {
   const type = CONTENT_TYPES[extname(path).toLowerCase()];
   if (!type) {
     throw new SolaraError(
-      `${basename(path)}: Solara takes .mp4, .mov and .webm files`,
+      `${basename(path)}: Solara AI takes .mp4, .mov and .webm files`,
       'Convert the video to MP4 first.',
       {
         exitCode: EXIT_USAGE,

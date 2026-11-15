@@ -1,4 +1,4 @@
-// The two commands that follow the agent API past the file upload: a recording Solara fetches from a
+// The two commands that follow the agent API past the file upload: a recording Solara AI fetches from a
 // link (upload-url), and the posting calendar, read-only (calendar).
 
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
@@ -18,7 +18,7 @@ const STATUS = '/api/v1/projects/uploads/status/u1';
 const fetching = { status: 200, json: { upload_id: 'u1', status: 'fetching', size_bytes: 9000 } };
 
 describe('upload-url', () => {
-  test('starts the fetch once, waits until Solara has the file, and says how to start', async () => {
+  test('starts the fetch once, waits until Solara AI has the file, and says how to start', async () => {
     api.on('POST', '/api/v1/projects/uploads/from-url', {
       status: 201,
       json: { upload_id: 'u1', status: 'fetching', size_bytes: 9000 },
@@ -40,7 +40,7 @@ describe('upload-url', () => {
     expect(result.stderr).toContain(`Idempotency-Key ${start?.headers['idempotency-key']}`);
     expect(result.sleeps).toHaveLength(1);
     expect(result.stdout).toContain('Fetched: upload_id u1, 31540 ms long.');
-    expect(result.stdout).toContain('Next: solara start --upload u1 --duration-ms 31540 --style brass');
+    expect(result.stdout).toContain('Next: solaraai start --upload u1 --duration-ms 31540 --style brass');
 
     const json = await cli(['upload-url', LINK, '--json'], { apiUrl: api.url });
     expect(JSON.parse(json.stdout)).toEqual(ready);
@@ -58,8 +58,8 @@ describe('upload-url', () => {
     });
     const result = await cli(['upload-url', LINK], { apiUrl: api.url });
     expect(result.code).toBe(EXIT_REFUSED);
-    expect(result.stderr).toContain('solara: the link asks to sign in (url_not_public)');
-    expect(result.stderr).toContain(`next: ${nextSteps('solara').url_not_public}`);
+    expect(result.stderr).toContain('solaraai: the link asks to sign in (url_not_public)');
+    expect(result.stderr).toContain(`next: ${nextSteps('solaraai').url_not_public}`);
   });
 
   test('past the timeout it is not ready, and the same key picks the fetch up again', async () => {
@@ -68,7 +68,7 @@ describe('upload-url', () => {
     const first = await cli(['upload-url', LINK, '--timeout', '0'], { apiUrl: api.url });
     expect(first.code).toBe(EXIT_NOT_READY);
     const key = api.to('POST', '/api/v1/projects/uploads/from-url')[0]?.headers['idempotency-key'] ?? '';
-    expect(first.stderr).toContain(`next: Run \`solara upload-url "${LINK}" --idempotency-key ${key}\` again.`);
+    expect(first.stderr).toContain(`next: Run \`solaraai upload-url "${LINK}" --idempotency-key ${key}\` again.`);
 
     await cli(['upload-url', LINK, '--timeout', '0', '--idempotency-key', key], { apiUrl: api.url });
     expect(api.to('POST', '/api/v1/projects/uploads/from-url')[1]?.headers['idempotency-key']).toBe(key);
@@ -111,7 +111,7 @@ describe('calendar', () => {
     const out = result.stdout.split('\n');
     expect(out).toContain('  2026-11-10 09:00 UTC  scheduled  instagram, tiktok  "Runner tips"  (video_id v1)');
     expect(out).toContain('      linkedin: failed (account_needs_reconnect)');
-    expect(result.stdout).toContain('They retry it in the Solara calendar; you cannot.');
+    expect(result.stdout).toContain('They retry it in the Solara AI calendar; you cannot.');
     expect(result.stdout).toContain(`Calendar: ${api.url}/calendar`);
   });
 
@@ -131,7 +131,7 @@ describe('calendar', () => {
     ]) {
       const result = await cli(argv, { apiUrl: api.url });
       expect(result.code).toBe(EXIT_USAGE);
-      expect(result.stderr).toContain('next: Run `solara calendar --help`');
+      expect(result.stderr).toContain('next: Run `solaraai calendar --help`');
     }
     expect(api.calls).toEqual([]);
   });

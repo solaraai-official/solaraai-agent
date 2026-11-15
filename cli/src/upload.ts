@@ -29,7 +29,7 @@ export async function uploadableSize(path: string): Promise<number> {
   if (!info?.isFile()) throw new SolaraError(`no such file: ${path}`, 'Check the path.', { exitCode: EXIT_USAGE });
   if (info.size <= 0 || info.size > MAX_UPLOAD_BYTES) {
     throw new SolaraError(
-      `${basename(path)} is ${info.size} bytes: Solara takes 1 byte to 2 GB`,
+      `${basename(path)} is ${info.size} bytes: Solara AI takes 1 byte to 2 GB`,
       'Trim or compress the video.',
       { exitCode: EXIT_USAGE },
     );
@@ -44,11 +44,12 @@ export async function uploadFile(client: Client, path: string, note: (line: stri
     size_bytes: size,
   });
   const uploadId = typeof opened.upload_id === 'string' ? opened.upload_id : '';
-  if (!uploadId) throw new SolaraError('Solara opened the upload without an upload_id', SERVER_STEP, { body: opened });
+  if (!uploadId)
+    throw new SolaraError('Solara AI opened the upload without an upload_id', SERVER_STEP, { body: opened });
   const urls = partUrls(opened);
   const total = Number(opened.total_parts);
   const ranges = partRanges(size, Number(opened.part_size), total);
-  note(`solara: uploading ${basename(path)}: ${(size / 1e6).toFixed(1)} MB in ${total} part(s)`);
+  note(`solaraai: uploading ${basename(path)}: ${(size / 1e6).toFixed(1)} MB in ${total} part(s)`);
   const etags = new Map<number, string>();
   const handle = await open(path, 'r');
   try {
@@ -56,7 +57,7 @@ export async function uploadFile(client: Client, path: string, note: (line: stri
       const chunk = Buffer.alloc(end - start);
       await handle.read(chunk, 0, chunk.length, start);
       etags.set(number, await putPart(client, uploadId, [number, total], urls, chunk, note));
-      note(`solara: uploaded part ${number}/${total}`);
+      note(`solaraai: uploaded part ${number}/${total}`);
     }
   } finally {
     await handle.close();
@@ -97,7 +98,9 @@ async function putPart(
     problem = tried.problem;
     if (attempt === WRITE_RETRIES) break;
     const wait = 2 * (attempt + 1);
-    note(`solara: part ${number}/${total}: ${problem}; retrying in ${wait}s (${attempt + 2} of ${WRITE_RETRIES + 1})`);
+    note(
+      `solaraai: part ${number}/${total}: ${problem}; retrying in ${wait}s (${attempt + 2} of ${WRITE_RETRIES + 1})`,
+    );
     await client.sleep(wait);
     const signed = await client.call('POST', `/projects/uploads/${uploadId}/parts`, { part_numbers: [number] });
     const held = (Array.isArray(signed.completed_parts) ? (signed.completed_parts as JsonObject[]) : []).find(

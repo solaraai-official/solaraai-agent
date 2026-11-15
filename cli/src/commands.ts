@@ -38,7 +38,7 @@ export function emit(ctx: Context, result: unknown, lines: string[]): void {
 }
 
 function editLink(ctx: Context, videoId: string): string {
-  return `${appUrl(ctx.client.apiUrl, ctx.env.SOLARA_APP_URL)}/projects/${videoId}`;
+  return `${appUrl(ctx.client.apiUrl, ctx.env.SOLARAAI_APP_URL)}/projects/${videoId}`;
 }
 
 /** One line per item: its id, then the name the app shows, in aligned columns. A style's name can
@@ -105,11 +105,14 @@ export async function startCommand(ctx: Context, input: StartInput): Promise<num
   if (size) [body.source_width, body.source_height] = size;
   if (input.title) body.title = input.title;
   const key = input.idempotencyKey || randomUUID();
-  ctx.note(`solara: Idempotency-Key ${key} (repeat with --idempotency-key ${key} to retry safely)`);
+  ctx.note(`solaraai: Idempotency-Key ${key} (repeat with --idempotency-key ${key} to retry safely)`);
   const created = await ctx.client.call('POST', '/projects', body, key);
   const video = typeof created.video_id === 'string' ? created.video_id : '';
   if (!video)
-    throw new SolaraError('Solara started no video', `Run \`${ctx.cli} start\` again with --idempotency-key ${key}.`);
+    throw new SolaraError(
+      'Solara AI started no video',
+      `Run \`${ctx.cli} start\` again with --idempotency-key ${key}.`,
+    );
   const link = editLink(ctx, video);
   created.edit_link = link;
   emit(ctx, created, [
@@ -155,7 +158,7 @@ async function waitFor(ctx: Context, videoId: string, until: WaitUntil, timeoutS
         { body: project, exitCode: EXIT_NOT_READY },
       );
     }
-    ctx.note(`solara: ${project.state}...`);
+    ctx.note(`solaraai: ${project.state}...`);
     await ctx.client.sleep(delays.next().value);
   }
 }
@@ -192,7 +195,7 @@ export async function exportCommand(
     return EXIT_OK;
   }
   const key = idempotencyKey || randomUUID();
-  ctx.note(`solara: Idempotency-Key ${key} (repeat with --idempotency-key ${key} to retry safely)`);
+  ctx.note(`solaraai: Idempotency-Key ${key} (repeat with --idempotency-key ${key} to retry safely)`);
   let exported: JsonObject;
   try {
     exported = await ctx.client.call('POST', `/projects/${videoId}/export`, { rev: target }, key);
@@ -231,7 +234,7 @@ async function downloadLink(ctx: Context, videoId: string): Promise<string> {
     throw new SolaraError('this video has not been exported yet', nextSteps(ctx.cli).not_exported);
   }
   if (typeof link.url !== 'string' || !link.url) {
-    throw new SolaraError('Solara gave no download link', `Run \`${ctx.cli} download ${videoId}\` again.`);
+    throw new SolaraError('Solara AI gave no download link', `Run \`${ctx.cli} download ${videoId}\` again.`);
   }
   return link.url;
 }

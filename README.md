@@ -34,7 +34,7 @@ npx -y solaraai login      # Node.js 20 or newer, nothing to install
 npx -y solaraai --help     # every command
 ```
 
-The [`solara-video`][skill] skill teaches an agent that runs commands Solara's CLI, the npm package
+The [`solara-video`][skill] skill teaches an agent that runs commands Solara AI's CLI, the npm package
 [`solaraai`](https://www.npmjs.com/package/solaraai). The CLI makes, edits and exports videos; it
 never posts. It never prints a key or a token.
 
@@ -47,11 +47,11 @@ The plugin adds the MCP server and the `solara-video` skill:
 /plugin install solaraai@solaraai
 ```
 
-Then type `/mcp`, pick **plugin:solaraai:solara**, sign in and choose **Allow**. Or, without the plugin:
+Then type `/mcp`, pick **plugin:solaraai:solaraai**, sign in and choose **Allow**. Or, without the plugin:
 
 ```bash
-claude mcp add --transport http --scope user solara https://api.solaraai.com/mcp
-claude mcp login solara
+claude mcp add --transport http --scope user solaraai https://api.solaraai.com/mcp
+claude mcp login solaraai
 ```
 
 [Claude Code guide](https://docs.solaraai.com/agents/claude-code)
@@ -62,9 +62,9 @@ claude mcp login solara
 https://api.solaraai.com/mcp
 ```
 
-A remote MCP server (Streamable HTTP). You sign in to Solara and choose **Allow**: no API key to copy.
-Every agent below opens Solara in your browser: sign in, check what it asks for, and choose **Allow**.
-Then ask it: *"List the video styles I can use in Solara."*
+A remote MCP server (Streamable HTTP). You sign in to Solara AI and choose **Allow**: no API key to copy.
+Every agent below opens Solara AI in your browser: sign in, check what it asks for, and choose **Allow**.
+Then ask it: *"List the video styles I can use in Solara AI."*
 
 ### Claude (claude.ai, Claude Desktop, the mobile apps)
 
@@ -73,7 +73,7 @@ Then ask it: *"List the video styles I can use in Solara."*
    then **Add custom connector**.
 2. Name it **Solara AI**, paste `https://api.solaraai.com/mcp` and click **Continue**. Keep the
    settings Claude fills in, then click **Add** and **Connect**.
-3. Sign in to Solara and choose **Allow**. In a chat, click **+**, then **Connectors**, and switch
+3. Sign in to Solara AI and choose **Allow**. In a chat, click **+**, then **Connectors**, and switch
    **Solara AI** on.
 
 Works on every Claude plan; Claude Free has one custom connector. On Team and Enterprise, an Owner
@@ -85,7 +85,7 @@ adds it in **Organization settings → Connectors** first.
 1. Open [chatgpt.com/plugins](https://chatgpt.com/plugins), select **+**, then **Add custom MCP server**.
 2. Name it **Solara AI** and paste `https://api.solaraai.com/mcp` under **Connection**.
 3. Set authentication to **OAuth**, tick **I understand and want to continue**, choose **Create as a
-   plugin**, then sign in to Solara and choose **Allow**. In a chat, type `@` and pick **Solara AI**.
+   plugin**, then sign in to Solara AI and choose **Allow**. In a chat, type `@` and pick **Solara AI**.
 
 ChatGPT edits and posts only on its Business, Enterprise and Edu plans, on the web; in a Business
 workspace, an admin or owner adds it. On ChatGPT Pro it can only read, and OpenAI doesn't list Plus
@@ -93,17 +93,17 @@ or Free. [ChatGPT guide](https://docs.solaraai.com/agents/chatgpt)
 
 ### Cursor
 
-Add Solara to `~/.cursor/mcp.json` (every project) or `.cursor/mcp.json` (one project):
+Add Solara AI to `~/.cursor/mcp.json` (every project) or `.cursor/mcp.json` (one project):
 
 ```json
 {
   "mcpServers": {
-    "solara": { "url": "https://api.solaraai.com/mcp" }
+    "solaraai": { "url": "https://api.solaraai.com/mcp" }
   }
 }
 ```
 
-Open Cursor's MCP settings on its **Customize** page: Solara is listed and asks you to sign in.
+Open Cursor's MCP settings on its **Customize** page: Solara AI is listed and asks you to sign in.
 [Cursor guide](https://docs.solaraai.com/agents/cursor)
 
 ### Other agents
@@ -111,13 +111,13 @@ Open Cursor's MCP settings on its **Customize** page: Solara is listed and asks 
 - **Grok Bot:** send your Bot `Add this MCP server: https://api.solaraai.com/mcp`, confirm, then
   choose **Connect** on the card. [Guide](https://docs.solaraai.com/agents/grok-bot)
 - **OpenClaw:** run
-  `openclaw mcp add solara --url https://api.solaraai.com/mcp --transport streamable-http --auth oauth`,
-  then `openclaw mcp login solara`. [Guide](https://docs.solaraai.com/agents/openclaw)
-- **Hermes Agent:** add `solara` with `url: "https://api.solaraai.com/mcp"` and `auth: oauth` under
-  `mcp_servers` in `~/.hermes/config.yaml`, then run `hermes mcp login solara`.
+  `openclaw mcp add solaraai --url https://api.solaraai.com/mcp --transport streamable-http --auth oauth`,
+  then `openclaw mcp login solaraai`. [Guide](https://docs.solaraai.com/agents/openclaw)
+- **Hermes Agent:** add `solaraai` with `url: "https://api.solaraai.com/mcp"` and `auth: oauth` under
+  `mcp_servers` in `~/.hermes/config.yaml`, then run `hermes mcp login solaraai`.
   [Guide](https://docs.solaraai.com/agents/hermes)
-- **opencode:** add `"solara": { "type": "remote", "url": "https://api.solaraai.com/mcp" }` under
-  `mcp` in `opencode.json`, then run `opencode mcp auth solara`.
+- **opencode:** add `"solaraai": { "type": "remote", "url": "https://api.solaraai.com/mcp" }` under
+  `mcp` in `opencode.json`, then run `opencode mcp auth solaraai`.
   [Guide](https://docs.solaraai.com/agents/opencode)
 - **Any MCP client:** add a remote MCP server with the address above. Sign-in is OAuth, and the
   agent asks for every permission at once.
@@ -128,7 +128,7 @@ Open Cursor's MCP settings on its **Customize** page: Solara is listed and asks 
 Claude Code, Cursor, opencode and Claude Desktop sessions that can open your files upload the
 recording themselves. ChatGPT, claude.ai in your browser and Grok Bot can't: paste a public link
 instead (a Google Drive link shared as *Anyone with the link*, a Dropbox link, or a file on a
-website), and Solara fetches it. Clips can be up to 10 minutes long (90 seconds on the free try).
+website), and Solara AI fetches it. Clips can be up to 10 minutes long (90 seconds on the free try).
 
 ## What your agent can ask for
 
@@ -137,19 +137,19 @@ website), and Solara fetches it. Clips can be up to 10 minutes long (90 seconds 
 | Read | See your videos, styles, calendar and whether your posts went out |
 | Edit | Upload footage and photos, and make and change videos |
 | Export | Export a video, which uses one of your plan's videos, as it does in the app |
-| Ask to post | Ask to post or schedule a video, photos or a text post. You approve each one in Solara |
+| Ask to post | Ask to post or schedule a video, photos or a text post. You approve each one in Solara AI |
 
 ## Tools
 
 | Step | Tools | What they do |
 | --- | --- | --- |
 | Find | `list_styles`, `list_videos`, `list_folders`, `list_ready_videos` | The styles and caption styles, your videos and folders, finished videos not posted yet (read-only) |
-| Bring in a recording | `start_upload`, `finish_upload`, `upload_from_url` | Upload a file from the agent's computer, or have Solara fetch a public link |
+| Bring in a recording | `start_upload`, `finish_upload`, `upload_from_url` | Upload a file from the agent's computer, or have Solara AI fetch a public link |
 | Edit | `create_video`, `get_status`, `get_preview` | Start an edit in a style, caption style, speed, pause length and format (9:16 or 16:9), follow it, read the edit and its transcript |
 | Change | `apply_edit`, `undo_agent_changes`, `swap_picture`, `new_music_track` | Change settings, captions, shots and zooms (one undo step each), take back the agent's own changes, a new b-roll picture or music track |
 | Organize | `create_folder`, `move_videos` | Make a folder and file videos in it |
 | Export | `export_video`, `get_download` | Render the MP4 after your yes, then download it |
-| Post | `list_social_accounts`, `prepare_publish`, `prepare_photo_post`, `start_image_upload`, `finish_image_upload`, `prepare_text_post`, `create_post_from_upload` | Ask to post a video Solara edited, your own finished video as it is, photos or a text post, now or at a time you pick, with a caption the agent writes from what you said or one you give it. Nothing goes out until you approve |
+| Post | `list_social_accounts`, `prepare_publish`, `prepare_photo_post`, `start_image_upload`, `finish_image_upload`, `prepare_text_post`, `create_post_from_upload` | Ask to post a video Solara AI edited, your own finished video as it is, photos or a text post, now or at a time you pick, with a caption the agent writes from what you said or one you give it. Nothing goes out until you approve |
 | Follow up | `get_publish_status`, `list_scheduled_posts` | Where a request stands, and what's on your calendar (read-only) |
 
 Tools that change or spend something of yours are marked destructive, so your agent can ask you
@@ -169,26 +169,26 @@ Which of my videos aren't posted yet?
 
 ## Nothing posts without your approval
 
-- Your agent can only **ask** to post. Each post waits for you in Solara, where you see the video,
+- Your agent can only **ask** to post. Each post waits for you in Solara AI, where you see the video,
   the caption, the platforms and the time, and approve it or not.
 - It shows you the edit link and waits for your yes before it exports.
 - It sees only your workspace. It never touches billing or your account, and it can't connect or
   disconnect your social accounts.
-- Disconnect it any time: in Solara, open the menu under your name, then **Connected apps**.
+- Disconnect it any time: in Solara AI, open the menu under your name, then **Connected apps**.
 
-Posting goes to the Instagram, TikTok, Facebook and LinkedIn accounts you connect in Solara.
+Posting goes to the Instagram, TikTok, Facebook and LinkedIn accounts you connect in Solara AI.
 Videos can be in English or Hebrew.
 
 ## What you need
 
-- A Solara account. AI agents work on every plan, within its limits. On the free try your first
-  download is free; posting a video Solara edited comes with a plan
+- A Solara AI account. AI agents work on every plan, within its limits. On the free try your first
+  download is free; posting a video Solara AI edited comes with a plan
   ([solaraai.com/pricing](https://solaraai.com/pricing)).
 - An AI agent that can use a remote MCP server.
 
 ## Learn more
 
-- [solaraai.com/agents](https://solaraai.com/agents): what an AI agent can do with Solara
+- [solaraai.com/agents](https://solaraai.com/agents): what an AI agent can do with Solara AI
 - [docs.solaraai.com/agents/connect](https://docs.solaraai.com/agents/connect): every connect guide
 - [docs.solaraai.com/mcp/overview](https://docs.solaraai.com/mcp/overview): every tool
 - Help: [solaraai.com/contact](https://solaraai.com/contact), or the support chat in the app
@@ -201,16 +201,16 @@ Videos can be in English or Hebrew.
 | --- | --- |
 | [.claude-plugin][claude-plugin], [.mcp.json][claude-mcp] | The Claude Code plugin and marketplace: the MCP server and the skill |
 | [.cursor-plugin][cursor-plugin], [mcp.json][cursor-mcp] | The same plugin in Cursor's format |
-| [skills/solara-video][skill] | The skill: its `SKILL.md` teaches an agent Solara's CLI |
+| [skills/solara-video][skill] | The skill: its `SKILL.md` teaches an agent Solara AI's CLI |
 | [cli][cli] | The source of the `solaraai` CLI, published to npm from here with provenance |
 
-The MCP server itself is hosted by Solara at `https://api.solaraai.com/mcp`; nothing runs on your
+The MCP server itself is hosted by Solara AI at `https://api.solaraai.com/mcp`; nothing runs on your
 machine.
 
 ## For maintainers
 
 The CLI, the skill, the plugin manifests, this README and its icon, SECURITY.md and MAINTAINERS.md are copies:
-their source is Solara's private monorepo, which syncs them here. Change them there, never here, or
+their source is Solara AI's private monorepo, which syncs them here. Change them there, never here, or
 the next sync undoes the change. Releases and checks: [MAINTAINERS.md][maintainers].
 
 ## License

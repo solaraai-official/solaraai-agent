@@ -1,6 +1,6 @@
-// `upload-url`: Solara fetches the recording from a public link itself (create-project-upload-from-url),
+// `upload-url`: Solara AI fetches the recording from a public link itself (create-project-upload-from-url),
 // for a person who shares a Google Drive or Dropbox link instead of a file. The CLI starts the fetch
-// with an Idempotency-Key and waits until Solara has the file; the same key picks the fetch up again.
+// with an Idempotency-Key and waits until Solara AI has the file; the same key picks the fetch up again.
 
 import { randomUUID } from 'node:crypto';
 import { backoffDelays } from './client';
@@ -8,7 +8,7 @@ import { type Context, emit } from './commands';
 import { EXIT_NOT_READY, EXIT_OK, type JsonObject, nextSteps, SolaraError } from './errors';
 import { DEFAULT_STYLE } from './video';
 
-/** How long `upload-url` waits for Solara to have the file, by default. */
+/** How long `upload-url` waits for Solara AI to have the file, by default. */
 export const FETCH_TIMEOUT_SECONDS = 900;
 
 function upload(answer: JsonObject): string {
@@ -42,10 +42,10 @@ export async function uploadUrlCommand(
 ): Promise<number> {
   const again = `${ctx.cli} upload-url "${link}"`;
   const key = idempotencyKey || randomUUID();
-  ctx.note(`solara: Idempotency-Key ${key} (repeat with --idempotency-key ${key} to pick this fetch up again)`);
+  ctx.note(`solaraai: Idempotency-Key ${key} (repeat with --idempotency-key ${key} to pick this fetch up again)`);
   const started = await ctx.client.call('POST', '/projects/uploads/from-url', { url: link }, key);
   const uploadId = upload(started);
-  if (!uploadId) throw new SolaraError('Solara started no fetch', `Run \`${again} --idempotency-key ${key}\`.`);
+  if (!uploadId) throw new SolaraError('Solara AI started no fetch', `Run \`${again} --idempotency-key ${key}\`.`);
 
   const deadline = Date.now() + timeoutSeconds * 1000;
   const delays = backoffDelays(3, 1.5, 15);
@@ -54,12 +54,16 @@ export async function uploadUrlCommand(
     state = await ctx.client.call('GET', `/projects/uploads/status/${uploadId}`);
     if (state.status !== 'fetching') break;
     if (Date.now() >= deadline) {
-      throw new SolaraError('Solara is still fetching the file', `Run \`${again} --idempotency-key ${key}\` again.`, {
-        body: state,
-        exitCode: EXIT_NOT_READY,
-      });
+      throw new SolaraError(
+        'Solara AI is still fetching the file',
+        `Run \`${again} --idempotency-key ${key}\` again.`,
+        {
+          body: state,
+          exitCode: EXIT_NOT_READY,
+        },
+      );
     }
-    ctx.note('solara: fetching...');
+    ctx.note('solaraai: fetching...');
     await ctx.client.sleep(delays.next().value);
   }
   if (state.status !== 'ready') throw fetchRefusal(ctx, state, again);
