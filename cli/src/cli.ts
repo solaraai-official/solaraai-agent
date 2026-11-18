@@ -4,7 +4,7 @@
 import { parseArgs } from 'node:util';
 import { version } from '../package.json' with { type: 'json' };
 import { calendarCommand } from './calendar';
-import { Client, DEFAULT_API_URL, type Sleep } from './client';
+import { Client, DEFAULT_API_URL, insideClaudeCode, type Sleep } from './client';
 import {
   type Context,
   downloadCommand,
@@ -246,7 +246,16 @@ function wire(io: Io, cli: string): Wiring {
     userAgent,
     sleep,
     client: (auth) =>
-      new Client({ auth, apiUrl, transport, sleep, log: (line) => io.stderr(`${line}\n`), userAgent, cli }),
+      new Client({
+        auth,
+        apiUrl,
+        transport,
+        sleep,
+        log: (line) => io.stderr(`${line}\n`),
+        userAgent,
+        cli,
+        noGeneratedMedia: insideClaudeCode(io.env),
+      }),
   };
 }
 

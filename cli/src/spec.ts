@@ -163,7 +163,7 @@ export const COMMANDS: CommandSpec[] = [
         name: 'speed',
         kind: 'number',
         value: '<x>',
-        help: `playback speed, ${SPEED_RANGE.join('-')}: 1.1, 1.25, 1.5 or 2 (the voice keeps its pitch)`,
+        help: `playback speed, ${SPEED_RANGE.join('-')}: 0.5, 1.25, 1.5 or 2 (the voice keeps its pitch)`,
       },
       {
         name: 'aspect',
@@ -309,9 +309,9 @@ export function mainHelp(cli: string, version: string): string {
   const lines = [
     `solaraai ${version}: make edited short videos with Solara AI, from a terminal or an AI agent.`,
     '',
-    'Solara AI edits a talking-head recording into a short video: cuts, captions, zooms, b-roll and',
-    'music in a chosen style. Upload the clip, start an edit, show the person the edit link, and',
-    'export it only when they say yes.',
+    'Solara AI edits a talking-head recording into a short video: cuts, captions, zooms and b-roll',
+    'in a chosen style. Upload the clip, start an edit, show the person the edit link, and export it',
+    'only when they say yes.',
     '',
     `Usage: ${cli} <command> [arguments] [--json]`,
     '       npx -y solaraai <command> ...   (nothing to install; Node 20+)',

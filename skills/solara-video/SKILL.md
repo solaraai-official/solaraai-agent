@@ -1,6 +1,6 @@
 ---
 name: solara-video
-description: Turn a talking-head recording into an edited, captioned short video with Solara AI (cuts, captions, zooms, b-roll, music in a chosen style), then export and download it. Use when the person asks to edit, caption or style a video with Solara AI, to make a Reel, TikTok or YouTube Short from a clip they filmed (a file or a Drive or Dropbox link), or what is on their Solara AI posting calendar. The person signs in once with `npx -y solaraai login` (a Solara AI API key in SOLARAAI_API_KEY works too, for servers and CI).
+description: Turn a talking-head recording into an edited, captioned short video with Solara AI (cuts, captions, zooms and b-roll in a chosen style), then export and download it. Use when the person asks to edit, caption or style a video with Solara AI, to make a Reel, TikTok or YouTube Short from a clip they filmed (a file or a Drive or Dropbox link), or what is on their Solara AI posting calendar. The person signs in once with `npx -y solaraai login` (a Solara AI API key in SOLARAAI_API_KEY works too, for servers and CI).
 compatibility: Node.js 20+ (the CLI runs with npx, nothing else to install) and internet access to api.solaraai.com and registry.npmjs.org. ffprobe is used when present.
 metadata:
   openclaw:
@@ -22,9 +22,10 @@ metadata:
 
 # Make a video with Solara AI
 
-Solara AI edits a talking-head recording into a short video: cuts, captions, zooms, b-roll and
-music in a chosen style. You upload the clip, start an edit, show the person the result, and
-export it when they say yes.
+Solara AI edits a talking-head recording into a short video: cuts, captions, zooms and b-roll in
+a chosen style. You upload the clip, start an edit, show the person the result, and export it
+when they say yes. Inside Claude Code the CLI asks Solara AI for no AI-generated b-roll and no AI music:
+its b-roll is stock photos and clips, and music is the person's own, added in the editor.
 
 If Solara AI's MCP tools are connected in this session (`list_styles`, `create_video`,
 `get_status`, `export_video`), use them instead: they do the same with the person's sign-in, and
@@ -106,7 +107,7 @@ Set these on `start`. They are fixed once the video starts: to change one, start
 | tight, snappy, fast-paced pauses | `--pause-ms 150` (Tight) |
 | no pauses at all, rapid-fire | `--pause-ms 50` (Tightest) |
 | natural pauses (the default) | nothing (Natural is 300 ms) |
-| faster, speed it up | `--speed 1.1`, `1.25`, `1.5` or `2` (0.8 to 2; 1 is normal, the voice keeps its pitch) |
+| faster or slower | `--speed 1.25`, `1.5`, `2` or `0.5` (0.25 to 4; 1 is normal, the voice keeps its pitch) |
 | landscape, horizontal, YouTube, 16:9 | `--aspect 16:9` (by default the video follows the clip: filmed sideways is 16:9 where landscape is offered, upright is 9:16; pass `--file <clip>` to `start` so it can read the clip) |
 | vertical, upright, for phones, 9:16 | `--aspect 9:16` |
 | subtle or bold edits | `--intensity light` / `medium` / `heavy` |

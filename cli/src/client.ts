@@ -22,6 +22,20 @@ export interface ClientOptions {
   userAgent: string;
   /** How this run was started (`solaraai`, or `npx -y solaraai`), for the next steps it prints. */
   cli: string;
+  /**
+   * Claude mode (insideClaudeCode): every call asks Solara to make no media for it, with
+   * `Solara-Generated-Media: off`, which the API honours from any agent: it only removes.
+   */
+  noGeneratedMedia?: boolean;
+}
+
+/**
+ * Whether this run is inside Claude Code, which sets `CLAUDECODE=1` in the commands its tools run
+ * and `AI_AGENT` to `claude-code_<version>_…`. Solara then makes no AI pictures, clips or music for
+ * it: Anthropic's directory excludes software that generates them (Claude mode).
+ */
+export function insideClaudeCode(env: Readonly<Record<string, string | undefined>>): boolean {
+  return env.CLAUDECODE?.trim() === '1' || (env.AI_AGENT ?? '').startsWith('claude-code');
 }
 
 /** Polling delays: start, x1.5 each time, never above cap, with a little jitter. */
@@ -67,6 +81,7 @@ export class Client {
   readonly userAgent: string;
   readonly auth: Credential;
   private readonly log: (line: string) => void;
+  private readonly noGeneratedMedia: boolean;
 
   constructor(options: ClientOptions) {
     this.auth = options.auth;
@@ -76,6 +91,7 @@ export class Client {
     this.log = options.log;
     this.userAgent = options.userAgent;
     this.cli = options.cli;
+    this.noGeneratedMedia = options.noGeneratedMedia ?? false;
   }
 
   private headers(bearer: string, hasBody: boolean, idempotencyKey?: string): Record<string, string> {
@@ -86,6 +102,7 @@ export class Client {
     };
     if (hasBody) headers['Content-Type'] = 'application/json';
     if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
+    if (this.noGeneratedMedia) headers['Solara-Generated-Media'] = 'off';
     return headers;
   }
 

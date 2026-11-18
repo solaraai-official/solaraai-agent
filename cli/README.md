@@ -1,8 +1,9 @@
 # solaraai
 
 Make edited short videos with [Solara AI](https://solaraai.com) from a terminal or an AI agent.
-Solara AI turns a talking-head recording into a short video: cuts, captions, zooms, b-roll and music
-in a style you choose. The CLI uploads the clip, starts the edit, and exports the video once the
+Solara AI turns a talking-head recording into a short video: cuts, captions, zooms and b-roll in a
+style you choose. Inside Claude Code (`CLAUDECODE=1`) every call says `Solara-Generated-Media: off`,
+and Solara AI adds no AI-generated b-roll pictures or clips and makes no AI music for it. The CLI uploads the clip, starts the edit, and exports the video once the
 person has seen it and said yes.
 
 ```bash

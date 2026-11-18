@@ -4,7 +4,7 @@ import { EXIT_USAGE, type JsonObject, SolaraError } from './errors';
 
 export const DEFAULT_STYLE = 'brass';
 export const PAUSE_MS_RANGE = [50, 500] as const;
-export const SPEED_RANGE = [0.8, 2] as const;
+export const SPEED_RANGE = [0.25, 4] as const;
 export const ASPECTS = ['9:16', '16:9'] as const;
 export const INTENSITIES = ['auto', 'light', 'medium', 'heavy'] as const;
 

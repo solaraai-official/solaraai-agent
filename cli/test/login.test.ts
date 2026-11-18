@@ -41,7 +41,7 @@ function signedIn(expiresInMs: number, access = ACCESS, refresh = REFRESH): Sign
   };
 }
 
-const identity = { workspace_name: 'Bakery on Main', credential: 'connected_app', name: 'Solara CLI' };
+const identity = { workspace_name: 'Bakery on Main', credential: 'connected_app', name: 'Solara AI CLI' };
 const tokens = (access: string, refresh: string) => ({
   status: 200,
   json: { access_token: access, refresh_token: refresh, token_type: 'Bearer', expires_in: 600, scope: 'mcp:read' },
