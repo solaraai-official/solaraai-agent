@@ -69,6 +69,24 @@ describe('signing in', () => {
   });
 });
 
+// Claude mode: inside Claude Code every call asks Solara to make no AI pictures, clips or music
+// (Anthropic's directory policy); a person's own terminal sends nothing new.
+describe('inside Claude Code', () => {
+  test('every call says Solara-Generated-Media: off; elsewhere none does', async () => {
+    api.on('GET', '/api/v1/styles', { status: 200, json: { styles: [], caption_styles: [] } });
+    for (const env of [{ CLAUDECODE: '1' }, { AI_AGENT: 'claude-code_2-1-326_agent' }]) {
+      const inside = await cli(['styles'], { apiUrl: api.url, env });
+      expect(inside.code, inside.stderr).toBe(EXIT_OK);
+      expect(api.calls.at(-1)?.headers['solara-generated-media']).toBe('off');
+    }
+    for (const env of [{}, { CLAUDECODE: '0' }, { AI_AGENT: 'codex_1' }]) {
+      const outside = await cli(['styles'], { apiUrl: api.url, env });
+      expect(outside.code, outside.stderr).toBe(EXIT_OK);
+      expect(api.calls.at(-1)?.headers).not.toHaveProperty('solara-generated-media');
+    }
+  });
+});
+
 describe('proxies', () => {
   test('a plain-HTTP API is reached through HTTP_PROXY', async () => {
     api.on('GET', 'http://solara.test/api/v1/styles', { status: 200, json: { styles: [], caption_styles: [] } });

@@ -119,8 +119,9 @@ describe('start', () => {
   test.each([
     ['--pause-ms', '40'],
     ['--pause-ms', '501'],
-    ['--speed', '0.7'],
-    ['--speed', '2.01'],
+    // 0.25-4 (owner, 2026-11-16).
+    ['--speed', '0.2'],
+    ['--speed', '4.01'],
     ['--speed', 'fast'],
     ['--aspect', '1:1'],
     ['--intensity', 'max'],

@@ -18,7 +18,7 @@
 
 <p align="center">
   Your AI agent turns a talking-head recording into an edited, captioned short video with
-  <a href="https://solaraai.com">Solara AI</a>: cuts, captions, zooms, b-roll and music in a style you choose.
+  <a href="https://solaraai.com">Solara AI</a>: cuts, captions, zooms and b-roll in a style you choose.
   It shows you the edit, exports only after your yes, and asks before it posts: you approve every post.
 </p>
 
@@ -146,20 +146,21 @@ website), and Solara AI fetches it. Clips can be up to 10 minutes long (90 secon
 | Find | `list_styles`, `list_videos`, `list_folders`, `list_ready_videos` | The styles and caption styles, your videos and folders, finished videos not posted yet (read-only) |
 | Bring in a recording | `start_upload`, `finish_upload`, `upload_from_url` | Upload a file from the agent's computer, or have Solara AI fetch a public link |
 | Edit | `create_video`, `get_status`, `get_preview` | Start an edit in a style, caption style, speed, pause length and format (9:16 or 16:9), follow it, read the edit and its transcript |
-| Change | `apply_edit`, `undo_agent_changes`, `swap_picture`, `new_music_track` | Change settings, captions, shots and zooms (one undo step each), take back the agent's own changes, a new b-roll picture or music track |
+| Change | `apply_edit`, `undo_agent_changes`, `swap_picture` | Change settings, captions, shots and zooms (one undo step each), take back the agent's own changes, a different b-roll picture |
 | Organize | `create_folder`, `move_videos` | Make a folder and file videos in it |
 | Export | `export_video`, `get_download` | Render the MP4 after your yes, then download it |
 | Post | `list_social_accounts`, `prepare_publish`, `prepare_photo_post`, `start_image_upload`, `finish_image_upload`, `prepare_text_post`, `create_post_from_upload` | Ask to post a video Solara AI edited, your own finished video as it is, photos or a text post, now or at a time you pick, with a caption the agent writes from what you said or one you give it. Nothing goes out until you approve |
 | Follow up | `get_publish_status`, `list_scheduled_posts` | Where a request stands, and what's on your calendar (read-only) |
 
 Tools that change or spend something of yours are marked destructive, so your agent can ask you
-first. Every tool, with its inputs: [docs.solaraai.com/mcp/overview](https://docs.solaraai.com/mcp/overview).
+first. In Claude and Claude Code, Solara AI adds no AI-generated b-roll pictures or clips and makes no AI
+music: b-roll comes from stock photos and clips, and your own music plays when you add it in the editor. Every tool, with its inputs: [docs.solaraai.com/mcp/overview](https://docs.solaraai.com/mcp/overview).
 
 ## Things to ask
 
 ```text
 Turn this recording into a Reel in the Brass style: <a Google Drive or Dropbox link>
-Make the captions bigger, add music and fix how my name is spelled.
+Make the captions bigger and fix how my name is spelled.
 Switch to Energy Pill captions and speed it up a little.
 Export it, write a caption and schedule it for Instagram and TikTok on Tuesday at 9 AM.
 Post it again on Thursday on LinkedIn, with a longer caption for LinkedIn.
