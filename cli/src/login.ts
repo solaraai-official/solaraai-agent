@@ -134,7 +134,7 @@ export async function logoutCommand(io: AuthIo): Promise<number> {
   else io.say(revoked ? 'Signed out.' : 'Signed out on this computer.');
   if (revoked === false) {
     io.note('solaraai: Solara AI could not be reached to end the sign-in there.');
-    io.note('next: tell the person to disconnect the CLI in Solara AI: Settings -> Connected apps.');
+    io.note('next: tell the person to disconnect the CLI in Solara AI: AI agents, in the sidebar.');
   }
   if (io.env.SOLARAAI_API_KEY?.trim()) io.note('SOLARAAI_API_KEY is still set: the CLI uses it now.');
   return EXIT_OK;

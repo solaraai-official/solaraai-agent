@@ -280,7 +280,7 @@ describe('status and logout', () => {
     const offline = await cli(['logout'], { apiUrl: api.url, env: { SOLARAAI_CONFIG_DIR: dir } });
     expect(offline.code).toBe(EXIT_OK);
     expect(offline.stdout).toBe('Signed out on this computer.\n');
-    expect(offline.stderr).toContain('Settings -> Connected apps');
+    expect(offline.stderr).toContain('AI agents, in the sidebar');
     expect(await new CredentialStore(dir).read(api.url)).toBeNull();
   });
 });

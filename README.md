@@ -134,8 +134,8 @@ website), and Solara AI fetches it. Clips can be up to 10 minutes long (90 secon
 
 | Permission | What the agent can do |
 | --- | --- |
-| Read | See your videos, styles, calendar and whether your posts went out |
-| Edit | Upload footage and photos, and make and change videos |
+| Read | See your videos, styles, calendar, whether your posts went out and how they are doing |
+| Edit | Upload your recording, photos and clips, and make and change videos |
 | Export | Export a video, which uses one of your plan's videos, as it does in the app |
 | Ask to post | Ask to post or schedule a video, photos or a text post. You approve each one in Solara AI |
 
@@ -145,16 +145,20 @@ website), and Solara AI fetches it. Clips can be up to 10 minutes long (90 secon
 | --- | --- | --- |
 | Find | `list_styles`, `list_videos`, `list_folders`, `list_ready_videos` | The styles and caption styles, your videos and folders, finished videos not posted yet (read-only) |
 | Bring in a recording | `start_upload`, `finish_upload`, `upload_from_url` | Upload a file from the agent's computer, or have Solara AI fetch a public link |
+| Your photos and clips | `add_footage`, `footage_status`, `remove_footage` | Add the person's own photos and clips before the video is made; Solara AI shows each on the line that mentions it |
 | Edit | `create_video`, `get_status`, `get_preview` | Start an edit in a style, caption style, speed, pause length and format (9:16 or 16:9), follow it, read the edit and its transcript |
-| Change | `apply_edit`, `undo_agent_changes`, `swap_picture` | Change settings, captions, shots and zooms (one undo step each), take back the agent's own changes, a different b-roll picture |
+| Change | `apply_edit`, `undo_agent_changes`, `swap_picture` | Change settings, captions, shots and zooms (one undo step each), take back the agent's own changes, a different b-roll picture or an AI clip |
 | Organize | `create_folder`, `move_videos` | Make a folder and file videos in it |
 | Export | `export_video`, `get_download` | Render the MP4 after your yes, then download it |
-| Post | `list_social_accounts`, `prepare_publish`, `prepare_photo_post`, `start_image_upload`, `finish_image_upload`, `prepare_text_post`, `create_post_from_upload` | Ask to post a video Solara AI edited, your own finished video as it is, photos or a text post, now or at a time you pick, with a caption the agent writes from what you said or one you give it. Nothing goes out until you approve |
+| Post | `list_social_accounts`, `list_pinterest_boards`, `prepare_publish`, `prepare_photo_post`, `start_image_upload`, `finish_image_upload`, `prepare_text_post`, `create_post_from_upload` | Ask to post a video Solara AI edited, your own finished video as it is, photos or a text post, now or at a time you pick, with a caption the agent writes from what you said or one you give it. Nothing goes out until you approve |
 | Follow up | `get_publish_status`, `list_scheduled_posts` | Where a request stands, and what's on your calendar (read-only) |
+| See how posts do | `list_performance_platforms`, `get_performance`, `list_post_performance`, `get_post_performance` | Each platform's own numbers for your posts, read on a schedule (read-only; YouTube's and Threads' aren't shared with agents) |
 
 Tools that change or spend something of yours are marked destructive, so your agent can ask you
-first. In Claude and Claude Code, Solara AI adds no AI-generated b-roll pictures or clips and makes no AI
-music: b-roll comes from stock photos and clips, and your own music plays when you add it in the editor. Every tool, with its inputs: [docs.solaraai.com/mcp/overview](https://docs.solaraai.com/mcp/overview).
+first. On a paid plan the b-roll also has AI clips (Gemini Omni Flash, MiniMax H3 Max or MiniMax H3 Max
+Turbo), and your agent can ask for one on a shot. In Claude and Claude Code, Solara AI adds no AI-generated
+b-roll pictures or clips and makes no AI music: b-roll comes from stock photos and clips, and your own
+music plays when you add it in the editor. Every tool, with its inputs: [docs.solaraai.com/mcp/overview](https://docs.solaraai.com/mcp/overview).
 
 ## Things to ask
 
@@ -166,6 +170,7 @@ Export it, write a caption and schedule it for Instagram and TikTok on Tuesday a
 Post it again on Thursday on LinkedIn, with a longer caption for LinkedIn.
 What's scheduled this week?
 Which of my videos aren't posted yet?
+How did my posts do this month?
 ```
 
 ## Nothing posts without your approval
@@ -175,9 +180,10 @@ Which of my videos aren't posted yet?
 - It shows you the edit link and waits for your yes before it exports.
 - It sees only your workspace. It never touches billing or your account, and it can't connect or
   disconnect your social accounts.
-- Disconnect it any time: in Solara AI, open the menu under your name, then **Connected apps**.
+- Disconnect it any time: in Solara AI, open **AI agents** in the sidebar.
 
-Posting goes to the Instagram, TikTok, Facebook and LinkedIn accounts you connect in Solara AI.
+Posting goes to the Instagram, TikTok, Facebook, LinkedIn, YouTube, X, Threads and Pinterest accounts
+you connect in Solara AI.
 Videos can be in English or Hebrew.
 
 ## What you need
