@@ -27,7 +27,7 @@ logs or stores the key: if you saw it do so, that is a vulnerability, so please 
 
 A sign-in from `solaraai login` is stored only in `~/.config/solaraai/credentials.json`, readable by
 your user alone. If that file was exposed, run `solaraai logout`, or disconnect the CLI in Solara AI
-under **Settings → Connected apps**: either ends the sign-in. The CLI never prints or logs
+under **AI agents** in the sidebar: either ends the sign-in. The CLI never prints or logs
 it either.
 
 ## How releases are protected

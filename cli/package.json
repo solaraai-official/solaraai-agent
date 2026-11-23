@@ -1,6 +1,6 @@
 {
   "name": "solaraai",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Solara AI from the command line: an AI agent turns a talking-head clip into an edited, captioned short video. Sign in once with `solaraai login`.",
   "type": "module",
   "bin": {

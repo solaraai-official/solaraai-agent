@@ -2,9 +2,11 @@
 
 Make edited short videos with [Solara AI](https://solaraai.com) from a terminal or an AI agent.
 Solara AI turns a talking-head recording into a short video: cuts, captions, zooms and b-roll in a
-style you choose. Inside Claude Code (`CLAUDECODE=1`) every call says `Solara-Generated-Media: off`,
-and Solara AI adds no AI-generated b-roll pictures or clips and makes no AI music for it. The CLI uploads the clip, starts the edit, and exports the video once the
-person has seen it and said yes.
+style you choose. On a paid plan the b-roll also has AI clips, made with the video's model (Gemini
+Omni Flash, unless the person picks MiniMax H3 Max or MiniMax H3 Max Turbo in the editor). Inside
+Claude Code (`CLAUDECODE=1`) every call says `Solara-Generated-Media: off`, and Solara AI adds no
+AI-generated b-roll pictures or clips and makes no AI music for it. The CLI uploads the clip, starts
+the edit, and exports the video once the person has seen it and said yes.
 
 ```bash
 npx -y solaraai --help      # nothing to install (Node.js 20 or newer)
@@ -29,7 +31,7 @@ none of its commands posts, so it never asks for that.
 `login` uses the OAuth device flow: the link opens on any device, so it works over SSH and from an
 agent's sandbox, where no browser can reach the machine. The sign-in is kept in
 `~/.config/solaraai/credentials.json` (readable by your user only; `SOLARAAI_CONFIG_DIR` moves it),
-refreshed on its own, and listed in Solara AI under **Settings → Connected apps**, where you can
+refreshed on its own, and listed in Solara AI under **AI agents** in the sidebar, where you can
 disconnect it.
 
 ### On a server or in CI
