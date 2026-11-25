@@ -182,8 +182,8 @@ How did my posts do this month?
   disconnect your social accounts.
 - Disconnect it any time: in Solara AI, open **AI agents** in the sidebar.
 
-Posting goes to the Instagram, TikTok, Facebook, LinkedIn, YouTube, X, Threads and Pinterest accounts
-you connect in Solara AI.
+Posting goes to the Instagram, TikTok, Facebook, LinkedIn, YouTube, X, Threads, Pinterest, Bluesky and
+Google Business Profile accounts you connect in Solara AI.
 Videos can be in English or Hebrew.
 
 ## What you need
